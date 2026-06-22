@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import {
-  Search, Shield, Building, Users, MapPin, Star, ArrowRight,
+  Search, Shield, Building, Users, Star, ArrowRight,
   CheckCircle, CreditCard, Home as HomeIcon, TrendingUp, Sparkles,
 } from 'lucide-react';
 import { useState } from 'react';
