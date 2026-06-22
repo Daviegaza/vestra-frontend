@@ -1,0 +1,13 @@
+{
+  "name": "Vestra — AI-Powered Property Platform",
+  "short_name": "Vestra",
+  "description": "The safest way to find, verify, and own property. AI verification, escrow protection, M-Pesa payments.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#059669",
+  "orientation": "portrait-primary",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
