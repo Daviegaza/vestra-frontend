@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Home, CreditCard, Wrench, Calendar, Receipt, FileText } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
-import DashboardShell from '../../components/layout/DashboardShell';
+
 import StatCard from '../../components/dashboard/StatCard';
 import Card, { Badge } from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
@@ -52,7 +52,7 @@ export default function TenantDashboard() {
   };
 
   return (
-    <DashboardShell>
+    <>
       {(section === 'tenant') && (
         <div className="space-y-8">
           <div><h1 className="text-2xl font-bold text-white">Tenant Dashboard</h1><p className="text-gray-400 mt-1">Manage your rental and payments.</p></div>
@@ -192,6 +192,6 @@ export default function TenantDashboard() {
       <Modal open={showPay} onClose={() => setShowPay(false)} title="Pay Rent via M-Pesa">
         <STKPushSimulator amount={45000} description="June 2026 Rent — 1BR Studio Kileleshwa" accountRef="TNT002-UNIT002" onSuccess={handlePayRent} onCancel={() => setShowPay(false)} />
       </Modal>
-    </DashboardShell>
+    </>
   );
 }

@@ -1,7 +1,7 @@
 import { Heart, Shield, TrendingUp, Building, ArrowRight, Search } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useMemo } from 'react';
-import DashboardShell from '../../components/layout/DashboardShell';
+
 import StatCard from '../../components/dashboard/StatCard';
 import PropertyCard from '../../components/property/PropertyCard';
 import Card, { Badge } from '../../components/ui/Card';
@@ -32,7 +32,7 @@ export default function BuyerDashboard() {
   const activeEscrows = (escrows || []).filter(e => e.status !== 'completed' && e.status !== 'cancelled').length;
 
   return (
-    <DashboardShell>
+    <>
       {(section === 'buyer') && (
         <div className="space-y-8">
           <div>
@@ -148,6 +148,6 @@ export default function BuyerDashboard() {
           )}
         </div>
       )}
-    </DashboardShell>
+    </>
   );
 }

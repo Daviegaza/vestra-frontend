@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Users, Building, Shield, AlertTriangle, UserCheck, UserX, Trash2, Search, CheckCircle, XCircle } from 'lucide-react';
-import DashboardShell from '../../components/layout/DashboardShell';
+
 import StatCard from '../../components/dashboard/StatCard';
 import Card, { Badge } from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
@@ -111,7 +111,6 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <DashboardShell>
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Admin Dashboard</h1>
@@ -368,6 +367,5 @@ export default function AdminDashboard() {
           </Card>
         )}
       </div>
-    </DashboardShell>
   );
 }

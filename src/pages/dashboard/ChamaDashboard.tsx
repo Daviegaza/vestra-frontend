@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Users, TrendingUp, CreditCard, Vote, PlusCircle, CheckCircle, UserPlus, Calendar } from 'lucide-react';
-import DashboardShell from '../../components/layout/DashboardShell';
+
 import StatCard from '../../components/dashboard/StatCard';
 import Card, { Badge } from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
@@ -72,7 +72,6 @@ export default function ChamaDashboard() {
   const totalCapital = initialMembers.reduce((s, m) => s + m.contribution, 0);
 
   return (
-    <DashboardShell>
       <div className="space-y-8">
         <div className="flex items-center justify-between">
           <div>
@@ -182,6 +181,5 @@ export default function ChamaDashboard() {
           </Card>
         )}
       </div>
-    </DashboardShell>
   );
 }

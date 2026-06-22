@@ -1,7 +1,7 @@
 import { Users, CreditCard, List, PlusCircle, Target } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useState } from 'react';
-import DashboardShell from '../../components/layout/DashboardShell';
+
 import StatCard from '../../components/dashboard/StatCard';
 import Card, { Badge } from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
@@ -73,7 +73,7 @@ export default function AgentDashboard() {
   const totalCommission = commissions.reduce((s, c) => s + c.commissionAmount, 0);
 
   return (
-    <DashboardShell>
+    <>
       {(section === 'agent') && (
         <div className="space-y-8">
           <div className="flex items-center justify-between">
@@ -192,6 +192,6 @@ export default function AgentDashboard() {
           </Card>
         </div>
       )}
-    </DashboardShell>
+    </>
   );
 }

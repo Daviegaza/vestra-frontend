@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Wrench, Clock, AlertTriangle, CheckCircle, User, Home, Phone, PlusCircle, Search, Calendar, DollarSign } from 'lucide-react';
-import DashboardShell from '../../components/layout/DashboardShell';
+
 import StatCard from '../../components/dashboard/StatCard';
 import Card, { Badge } from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
@@ -65,7 +65,7 @@ export default function MaintenanceHub() {
   };
 
   return (
-    <DashboardShell>
+    <>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -230,6 +230,6 @@ export default function MaintenanceHub() {
           </div>
         </div>
       </Modal>
-    </DashboardShell>
+    </>
   );
 }

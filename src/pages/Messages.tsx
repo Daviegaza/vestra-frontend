@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Search, Phone, Mail, Send } from 'lucide-react';
-import DashboardShell from '../components/layout/DashboardShell';
+
 import Button from '../components/ui/Button';
 import { messages } from '../data/messages';
 
@@ -10,7 +10,7 @@ export default function Messages() {
   const active = messages.find((m) => m.id === selected);
 
   return (
-    <DashboardShell>
+
       <div className="h-full flex rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-hidden" style={{ minHeight: 'calc(100vh - 180px)' }}>
         <div className="w-80 border-r border-gray-200 dark:border-gray-700 flex flex-col">
           <div className="p-3 border-b border-gray-200 dark:border-gray-700">
@@ -99,6 +99,6 @@ export default function Messages() {
           )}
         </div>
       </div>
-    </DashboardShell>
+
   );
 }

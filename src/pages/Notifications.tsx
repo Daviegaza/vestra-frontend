@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Info, AlertTriangle, CheckCircle, CreditCard, Shield, MessageSquare, X } from 'lucide-react';
-import DashboardShell from '../components/layout/DashboardShell';
+
 import { Badge } from '../components/ui/Card';
 import { notifications as mockData } from '../data/notifications';
 import { toast } from '../store/toastStore';
@@ -36,7 +36,7 @@ export default function Notifications() {
   };
 
   return (
-    <DashboardShell>
+
       <div className="max-w-3xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -75,6 +75,6 @@ export default function Notifications() {
           })}
         </div>
       </div>
-    </DashboardShell>
+
   );
 }

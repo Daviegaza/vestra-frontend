@@ -1,7 +1,7 @@
 import { List, Eye, TrendingUp, MessageSquare, PlusCircle, Edit, BarChart3 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useState } from 'react';
-import DashboardShell from '../../components/layout/DashboardShell';
+
 import StatCard from '../../components/dashboard/StatCard';
 import Card, { Badge } from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
@@ -66,7 +66,7 @@ export default function SellerDashboard() {
   };
 
   return (
-    <DashboardShell>
+    <>
       {(section === 'seller') && (
         <div className="space-y-8">
           <div className="flex items-center justify-between">
@@ -190,6 +190,6 @@ export default function SellerDashboard() {
           </Card>
         </div>
       )}
-    </DashboardShell>
+    </>
   );
 }

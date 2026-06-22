@@ -1,7 +1,7 @@
 import { Home, Users, Wrench, CreditCard, PlusCircle, FileText, Receipt, Clock, TrendingUp, Phone } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { useState } from 'react';
-import DashboardShell from '../../components/layout/DashboardShell';
+
 import BuildingUnitsView from '../../components/property/BuildingUnitsView';
 import StatCard from '../../components/dashboard/StatCard';
 import Card, { Badge } from '../../components/ui/Card';
@@ -38,7 +38,7 @@ export default function LandlordDashboard() {
   }).reduce((s, r) => s + r.amount, 0);
 
   return (
-    <DashboardShell>
+    <>
       {/* Overview */}
       {(section === 'landlord') && (
         <div className="space-y-8">
@@ -276,6 +276,6 @@ export default function LandlordDashboard() {
           </div>
         </form>
       </Modal>
-    </DashboardShell>
+    </>
   );
 }

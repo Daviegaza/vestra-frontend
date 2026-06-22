@@ -2,13 +2,10 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { useEffect, lazy, Suspense } from 'react';
 import { initAuth } from './store/authStore';
 import { initTheme } from './store/themeStore';
-import Navbar from './components/layout/Navbar';
-import Footer from './components/layout/Footer';
 import AuthGuard from './components/layout/AuthGuard';
-import AIAssistant from './components/ai/AIAssistant';
-import ToastContainer from './components/ui/ToastContainer';
-import FloatingQuickActions from './components/ui/FloatingQuickActions';
-import PWAInstallPrompt from './components/layout/PWAInstallPrompt';
+import PublicLayout from './components/layout/PublicLayout';
+import DashboardLayout from './components/layout/DashboardLayout';
+import AuthLayout from './components/layout/AuthLayout';
 import { Spinner } from './components/ui/Card';
 
 // Lazy-load all page components for code-splitting
@@ -57,22 +54,6 @@ function PageLoader() {
   );
 }
 
-function PageShell({ children, noFooter }: { children: React.ReactNode; noFooter?: boolean }) {
-  return (
-    <div className="min-h-screen bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 transition-colors">
-      <Navbar />
-      <main className="bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 transition-colors duration-300">
-        <Suspense fallback={<PageLoader />}>{children}</Suspense>
-      </main>
-      <AIAssistant />
-      <ToastContainer />
-      <FloatingQuickActions />
-      <PWAInstallPrompt />
-      {!noFooter && <Footer />}
-    </div>
-  );
-}
-
 export default function App() {
   useEffect(() => {
     initAuth();
@@ -81,63 +62,75 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<PageShell><Home /></PageShell>} />
-        <Route path="/market" element={<PageShell><Market /></PageShell>} />
-        <Route path="/agents" element={<PageShell><Agents /></PageShell>} />
-        <Route path="/about" element={<PageShell><About /></PageShell>} />
-        <Route path="/contact" element={<PageShell><Contact /></PageShell>} />
-        <Route path="/faq" element={<PageShell><FAQ /></PageShell>} />
-        <Route path="/blog" element={<PageShell><Blog /></PageShell>} />
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          {/* Public Routes */}
+          <Route element={<PublicLayout />}>
+            <Route path="/" element={<Home />} />
+            <Route path="/market" element={<Market />} />
+            <Route path="/agents" element={<Agents />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/faq" element={<FAQ />} />
+            <Route path="/blog" element={<Blog />} />
+            <Route path="/blog/:slug" element={<BlogPost />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="*" element={<NotFound />} />
+          </Route>
 
-        <Route path="/properties/:id" element={<AuthGuard><PageShell><PropertyDetail /></PageShell></AuthGuard>} />
-        <Route path="/properties/compare" element={<AuthGuard><PageShell><PropertyCompare /></PageShell></AuthGuard>} />
-        <Route path="/verify" element={<AuthGuard><PageShell><Verify /></PageShell></AuthGuard>} />
-        <Route path="/agents/:id" element={<AuthGuard><PageShell><AgentDetail /></PageShell></AuthGuard>} />
-        <Route path="/insights" element={<AuthGuard><PageShell><MarketInsights /></PageShell></AuthGuard>} />
-        <Route path="/terms" element={<PageShell><Terms /></PageShell>} />
-        <Route path="/privacy" element={<PageShell><Privacy /></PageShell>} />
-        <Route path="/blog/:slug" element={<PageShell><BlogPost /></PageShell>} />
+          {/* Auth-protected Public Routes */}
+          <Route element={<AuthGuard><PublicLayout /></AuthGuard>}>
+            <Route path="/properties/:id" element={<PropertyDetail />} />
+            <Route path="/properties/compare" element={<PropertyCompare />} />
+            <Route path="/verify" element={<Verify />} />
+            <Route path="/agents/:id" element={<AgentDetail />} />
+            <Route path="/insights" element={<MarketInsights />} />
+          </Route>
 
-        <Route path="/auth/login" element={<PageShell noFooter><Login /></PageShell>} />
-        <Route path="/auth/register" element={<PageShell noFooter><Register /></PageShell>} />
+          {/* Auth Routes (Login/Register) */}
+          <Route element={<AuthLayout />}>
+            <Route path="/auth/login" element={<Login />} />
+            <Route path="/auth/register" element={<Register />} />
+          </Route>
 
-        <Route path="/sell" element={<AuthGuard><PageShell noFooter><SellProperty /></PageShell></AuthGuard>} />
-        <Route path="/dashboard" element={<AuthGuard><PageShell noFooter><Dashboard /></PageShell></AuthGuard>} />
-        <Route path="/dashboard/seller" element={<AuthGuard><PageShell noFooter><SellerDashboard /></PageShell></AuthGuard>} />
-        <Route path="/dashboard/seller/listings" element={<AuthGuard><PageShell noFooter><SellerDashboard /></PageShell></AuthGuard>} />
-        <Route path="/dashboard/seller/add" element={<AuthGuard><PageShell noFooter><SellerDashboard /></PageShell></AuthGuard>} />
-        <Route path="/dashboard/seller/analytics" element={<AuthGuard><PageShell noFooter><SellerDashboard /></PageShell></AuthGuard>} />
-        <Route path="/dashboard/landlord" element={<AuthGuard><PageShell noFooter><LandlordDashboard /></PageShell></AuthGuard>} />
-        <Route path="/dashboard/landlord/units" element={<AuthGuard><PageShell noFooter><LandlordDashboard /></PageShell></AuthGuard>} />
-        <Route path="/dashboard/landlord/tenants" element={<AuthGuard><PageShell noFooter><LandlordDashboard /></PageShell></AuthGuard>} />
-        <Route path="/dashboard/landlord/maintenance" element={<AuthGuard><PageShell noFooter><LandlordDashboard /></PageShell></AuthGuard>} />
-        <Route path="/dashboard/tenant" element={<AuthGuard><PageShell noFooter><TenantDashboard /></PageShell></AuthGuard>} />
-        <Route path="/dashboard/tenant/rent" element={<AuthGuard><PageShell noFooter><TenantDashboard /></PageShell></AuthGuard>} />
-        <Route path="/dashboard/tenant/receipts" element={<AuthGuard><PageShell noFooter><TenantDashboard /></PageShell></AuthGuard>} />
-        <Route path="/dashboard/tenant/maintenance" element={<AuthGuard><PageShell noFooter><TenantDashboard /></PageShell></AuthGuard>} />
-        <Route path="/dashboard/agent" element={<AuthGuard><PageShell noFooter><AgentDashboard /></PageShell></AuthGuard>} />
-        <Route path="/dashboard/agent/listings" element={<AuthGuard><PageShell noFooter><AgentDashboard /></PageShell></AuthGuard>} />
-        <Route path="/dashboard/agent/leads" element={<AuthGuard><PageShell noFooter><AgentDashboard /></PageShell></AuthGuard>} />
-        <Route path="/dashboard/agent/commissions" element={<AuthGuard><PageShell noFooter><AgentDashboard /></PageShell></AuthGuard>} />
-        <Route path="/dashboard/agent/add" element={<AuthGuard><PageShell noFooter><AgentDashboard /></PageShell></AuthGuard>} />
-        <Route path="/dashboard/agent/subscription" element={<AuthGuard><PageShell noFooter><Subscription /></PageShell></AuthGuard>} />
-        <Route path="/dashboard/escrow" element={<AuthGuard><PageShell noFooter><EscrowManagement /></PageShell></AuthGuard>} />
-        <Route path="/dashboard/analytics" element={<AuthGuard><PageShell noFooter><Analytics /></PageShell></AuthGuard>} />
-        <Route path="/dashboard/maintenance" element={<AuthGuard><PageShell noFooter><MaintenanceHub /></PageShell></AuthGuard>} />
-        <Route path="/dashboard/chama" element={<AuthGuard><PageShell noFooter><ChamaDashboard /></PageShell></AuthGuard>} />
-        <Route path="/dashboard/admin" element={<AuthGuard><PageShell noFooter><AdminDashboard /></PageShell></AuthGuard>} />
-        <Route path="/dashboard/admin/users" element={<AuthGuard><PageShell noFooter><AdminDashboard /></PageShell></AuthGuard>} />
-        <Route path="/dashboard/admin/properties" element={<AuthGuard><PageShell noFooter><AdminDashboard /></PageShell></AuthGuard>} />
-        <Route path="/dashboard/admin/verifications" element={<AuthGuard><PageShell noFooter><AdminDashboard /></PageShell></AuthGuard>} />
-        <Route path="/dashboard/admin/fraud" element={<AuthGuard><PageShell noFooter><AdminDashboard /></PageShell></AuthGuard>} />
-
-        <Route path="/messages" element={<AuthGuard><PageShell noFooter><Messages /></PageShell></AuthGuard>} />
-        <Route path="/notifications" element={<AuthGuard><PageShell noFooter><Notifications /></PageShell></AuthGuard>} />
-        <Route path="/settings" element={<AuthGuard><PageShell noFooter><Settings /></PageShell></AuthGuard>} />
-
-        <Route path="*" element={<PageShell><NotFound /></PageShell>} />
-      </Routes>
+          {/* Dashboard Routes (Sidebar + Topbar layout) */}
+          <Route element={<AuthGuard><DashboardLayout /></AuthGuard>}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/dashboard/seller" element={<SellerDashboard />} />
+            <Route path="/dashboard/seller/listings" element={<SellerDashboard />} />
+            <Route path="/dashboard/seller/add" element={<SellerDashboard />} />
+            <Route path="/dashboard/seller/analytics" element={<SellerDashboard />} />
+            <Route path="/dashboard/landlord" element={<LandlordDashboard />} />
+            <Route path="/dashboard/landlord/units" element={<LandlordDashboard />} />
+            <Route path="/dashboard/landlord/tenants" element={<LandlordDashboard />} />
+            <Route path="/dashboard/landlord/maintenance" element={<LandlordDashboard />} />
+            <Route path="/dashboard/tenant" element={<TenantDashboard />} />
+            <Route path="/dashboard/tenant/rent" element={<TenantDashboard />} />
+            <Route path="/dashboard/tenant/receipts" element={<TenantDashboard />} />
+            <Route path="/dashboard/tenant/maintenance" element={<TenantDashboard />} />
+            <Route path="/dashboard/agent" element={<AgentDashboard />} />
+            <Route path="/dashboard/agent/listings" element={<AgentDashboard />} />
+            <Route path="/dashboard/agent/leads" element={<AgentDashboard />} />
+            <Route path="/dashboard/agent/commissions" element={<AgentDashboard />} />
+            <Route path="/dashboard/agent/add" element={<AgentDashboard />} />
+            <Route path="/dashboard/agent/subscription" element={<Subscription />} />
+            <Route path="/dashboard/escrow" element={<EscrowManagement />} />
+            <Route path="/dashboard/analytics" element={<Analytics />} />
+            <Route path="/dashboard/maintenance" element={<MaintenanceHub />} />
+            <Route path="/dashboard/chama" element={<ChamaDashboard />} />
+            <Route path="/dashboard/admin" element={<AdminDashboard />} />
+            <Route path="/dashboard/admin/users" element={<AdminDashboard />} />
+            <Route path="/dashboard/admin/properties" element={<AdminDashboard />} />
+            <Route path="/dashboard/admin/verifications" element={<AdminDashboard />} />
+            <Route path="/dashboard/admin/fraud" element={<AdminDashboard />} />
+            <Route path="/messages" element={<Messages />} />
+            <Route path="/notifications" element={<Notifications />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/sell" element={<SellProperty />} />
+          </Route>
+        </Routes>
+      </Suspense>
     </BrowserRouter>
   );
 }

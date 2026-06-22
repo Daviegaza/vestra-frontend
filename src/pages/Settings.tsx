@@ -1,6 +1,6 @@
 import { User, Lock, Bell, Save } from 'lucide-react';
 import { useState } from 'react';
-import DashboardShell from '../components/layout/DashboardShell';
+
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
@@ -35,7 +35,7 @@ export default function Settings() {
   };
 
   return (
-    <DashboardShell>
+
       <div className="max-w-2xl mx-auto space-y-8">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Settings</h1>
@@ -84,6 +84,6 @@ export default function Settings() {
           </div>
         </Card>
       </div>
-    </DashboardShell>
+
   );
 }

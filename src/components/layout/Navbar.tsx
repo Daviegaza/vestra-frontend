@@ -1,33 +1,43 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Building, Shield, Users, Info, Menu, X, Bell, LogOut, User, Settings, MessageSquare, LayoutDashboard, Globe, Search, Home, Sparkles, Sun, Moon, Heart, DollarSign } from 'lucide-react';
+import {
+  Building, Shield, Users, Info, Menu, X, Bell, LogOut,
+  User, Settings, MessageSquare, LayoutDashboard, Search,
+  Home, Sparkles, Sun, Moon, Globe, DollarSign, Heart,
+  ChevronDown, MapPin,
+} from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { useThemeStore } from '../../store/themeStore';
 import { useRealtimeStore } from '../../store/realtimeStore';
 import Button from '../ui/Button';
+import Avatar from '../ui/Avatar';
+import NotificationCenter from '../ui/NotificationCenter';
+
+const counties = ['Nairobi', 'Mombasa', 'Kisumu', 'Nakuru', 'Kiambu', 'Uasin Gishu', 'Kilifi', 'Machakos', 'Nyeri'];
 
 export default function Navbar() {
   const { isAuthenticated, user, logout } = useAuthStore();
   const { theme, toggle: toggleTheme } = useThemeStore();
-  const { unreadCount, connect } = useRealtimeStore();
+  const { unreadCount } = useRealtimeStore();
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
   const [lang, setLang] = useState<'en' | 'sw'>(() => (localStorage.getItem('vestra_lang') as 'en' | 'sw') || 'en');
+  const [scrolled, setScrolled] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (isAuthenticated) connect();
-  }, [isAuthenticated, connect]);
+    const handler = () => setScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', handler, { passive: true });
+    return () => window.removeEventListener('scroll', handler);
+  }, []);
 
-  // Close profile dropdown when clicking outside
   useEffect(() => {
     if (!profileOpen) return;
     const handler = (e: MouseEvent) => {
-      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
-        setProfileOpen(false);
-      }
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) setProfileOpen(false);
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
@@ -37,6 +47,7 @@ export default function Navbar() {
 
   const handleLogout = () => {
     logout();
+    setProfileOpen(false);
     navigate('/');
   };
 
@@ -76,29 +87,71 @@ export default function Navbar() {
         { to: '/about', label: t('About', 'Kuhusu'), icon: Info },
       ];
 
+  const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + '/');
+
   return (
     <>
-      <nav className="sticky top-0 z-40 bg-gray-900/95 backdrop-blur-lg border-b border-gray-800">
+      <nav
+        className={`sticky top-0 z-40 transition-all duration-300 ${
+          scrolled
+            ? 'glass-premium shadow-sm'
+            : 'bg-white/80 dark:bg-gray-950/80 backdrop-blur-lg border-b border-transparent'
+        } ${!scrolled ? 'border-b border-gray-100 dark:border-gray-800' : ''}`}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <Link to="/" className="flex items-center gap-2 font-bold text-xl">
-              <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center">
-                <Building size={18} className="text-white" />
+            {/* Logo */}
+            <Link to="/" className="flex items-center gap-2 font-bold text-xl shrink-0">
+              <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center shadow-sm">
+                <Building size={16} className="text-white" />
               </div>
-              <span className="text-emerald-400">Vestra</span>
-              <span className="hidden sm:inline text-xs bg-savannah-900/30 text-savannah-400 px-1.5 py-0.5 rounded font-normal">KE</span>
+              <span className="text-emerald-600 dark:text-emerald-400">Vestra</span>
+              <span className="hidden sm:inline text-[10px] bg-savannah-100 dark:bg-savannah-900/30 text-savannah-700 dark:text-savannah-400 px-1.5 py-0.5 rounded font-semibold uppercase">
+                KE
+              </span>
             </Link>
 
             {/* Desktop Nav */}
-            <div className="hidden lg:flex items-center gap-1">
-              {navLinks.map((link) => (
+            <div className="hidden lg:flex items-center gap-0.5">
+              {/* Properties Mega Menu Trigger */}
+              <div className="relative group">
+                <Link
+                  to="/market"
+                  className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-xl transition-all ${
+                    isActive('/market')
+                      ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400'
+                      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'
+                  }`}
+                >
+                  <Building size={16} />
+                  {t('Properties', 'Mali')}
+                  <ChevronDown size={12} className="opacity-50" />
+                </Link>
+                {/* County dropdown on hover */}
+                <div className="absolute top-full left-0 mt-1 w-56 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 py-2">
+                  <div className="px-3 py-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                    <MapPin size={12} className="inline mr-1" />Popular Counties
+                  </div>
+                  {counties.map((c) => (
+                    <Link
+                      key={c}
+                      to={`/market?county=${c}`}
+                      className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                    >
+                      {c}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+
+              {navLinks.slice(1).map((link) => (
                 <Link
                   key={link.to}
                   to={link.to}
-                  className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg transition-colors cursor-pointer ${
-                    location.pathname.startsWith(link.to)
-                      ? 'bg-emerald-900/20 text-emerald-400'
-                      : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                  className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-xl transition-all ${
+                    isActive(link.to)
+                      ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400'
+                      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'
                   }`}
                 >
                   <link.icon size={16} />
@@ -108,64 +161,102 @@ export default function Navbar() {
             </div>
 
             {/* Desktop Right */}
-            <div className="hidden lg:flex items-center gap-1.5">
+            <div className="hidden lg:flex items-center gap-1">
+              {/* Theme */}
               <button
                 onClick={toggleTheme}
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium hover:bg-gray-800 transition-colors cursor-pointer"
+                className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                 aria-label="Toggle theme"
               >
-                {theme === 'dark' ? <Sun size={14} className="text-amber-400" /> : <Moon size={14} className="text-gray-400" />}
+                {theme === 'dark' ? <Sun size={16} className="text-amber-400" /> : <Moon size={16} />}
               </button>
+
+              {/* Language */}
               <button
                 onClick={() => setLang(lang === 'en' ? 'sw' : 'en')}
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium hover:bg-gray-800 transition-colors cursor-pointer"
+                className="flex items-center gap-1 px-2 py-2 rounded-lg text-xs font-semibold text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors uppercase"
               >
-                <Globe size={14} className="text-gray-400" />
-                <span className="uppercase text-gray-400">{lang}</span>
+                <Globe size={14} />
+                {lang}
               </button>
 
               {isAuthenticated ? (
                 <>
-                  <Link to="/notifications" className="p-2 rounded-lg hover:bg-gray-800 relative cursor-pointer">
-                    <Bell size={18} className="text-gray-400" />
+                  {/* Notifications */}
+                  <button
+                    onClick={() => setNotifOpen(!notifOpen)}
+                    className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors relative"
+                    aria-label="Notifications"
+                  >
+                    <Bell size={18} />
                     {unreadCount > 0 && (
-                      <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                      <span className="absolute top-1 right-1 min-w-[17px] h-[17px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
                         {unreadCount > 99 ? '99+' : unreadCount}
                       </span>
                     )}
+                  </button>
+
+                  {/* Messages */}
+                  <Link
+                    to="/messages"
+                    className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                    aria-label="Messages"
+                  >
+                    <MessageSquare size={18} />
                   </Link>
-                  <Link to="/messages" className="p-2 rounded-lg hover:bg-gray-800 cursor-pointer">
-                    <MessageSquare size={18} className="text-gray-400" />
-                  </Link>
-                  <div className="relative" ref={profileRef}>
+
+                  {/* Profile */}
+                  <div className="relative ml-1" ref={profileRef}>
                     <button
                       onClick={() => setProfileOpen(!profileOpen)}
-                      className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-gray-800 cursor-pointer"
+                      className="flex items-center gap-2 pl-1.5 pr-2 py-1 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                     >
-                      <div className="w-7 h-7 rounded-full bg-emerald-900 flex items-center justify-center">
-                        <User size={14} className="text-emerald-400" />
-                      </div>
-                      <span className="text-sm font-medium text-gray-200">{user?.fullName}</span>
+                      <Avatar name={user?.fullName} size="xs" />
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300 max-w-[100px] truncate hidden xl:inline">
+                        {user?.fullName}
+                      </span>
+                      <ChevronDown size={12} className="text-gray-400 hidden xl:block" />
                     </button>
+
                     {profileOpen && (
-                      <div className="absolute right-0 mt-1 w-52 bg-gray-800 rounded-xl shadow-lg border border-gray-700 z-50 animate-scale-in">
-                        <div className="px-4 py-3 border-b border-gray-700">
-                          <p className="text-sm font-medium text-white">{user?.fullName}</p>
-                          <p className="text-xs text-gray-400 capitalize">{user?.role}</p>
+                      <div className="absolute right-0 mt-1 w-56 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 z-50 py-1 animate-scale-in overflow-hidden">
+                        <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
+                          <p className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                            <Avatar name={user?.fullName} size="sm" />
+                            {user?.fullName}
+                          </p>
+                          <p className="text-xs text-gray-500 mt-0.5 capitalize">{user?.role} &middot; {user?.email}</p>
                         </div>
-                        <Link to="/sell" onClick={() => setProfileOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-700 cursor-pointer"><DollarSign size={16} /> {t('Sell Property', 'Uza Mali')}</Link>
+
                         {user?.role !== 'buyer' ? (
-                          <Link to="/dashboard" onClick={() => setProfileOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-700 cursor-pointer"><LayoutDashboard size={16} /> {t('Dashboard', 'Dashibodi')}</Link>
+                          <Link to="/dashboard" onClick={() => setProfileOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                            <LayoutDashboard size={16} /> {t('Dashboard', 'Dashibodi')}
+                          </Link>
                         ) : (
                           <>
-                            <Link to="/market" onClick={() => setProfileOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-700 cursor-pointer"><Building size={16} /> {t('Browse Properties', 'Vinjari Mali')}</Link>
-                            <Link to="/settings" onClick={() => setProfileOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-700 cursor-pointer"><Heart size={16} /> {t('Saved Properties', 'Zilizohifadhiwa')}</Link>
+                            <Link to="/market" onClick={() => setProfileOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                              <Building size={16} /> {t('Browse Properties', 'Vinjari Mali')}
+                            </Link>
+                            <Link to="/settings" onClick={() => setProfileOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                              <Heart size={16} /> {t('Saved', 'Zilizohifadhiwa')}
+                            </Link>
                           </>
                         )}
-                        <Link to="/messages" onClick={() => setProfileOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-700 cursor-pointer"><MessageSquare size={16} /> {t('Messages', 'Jumbe')}</Link>
-                        <Link to="/settings" onClick={() => setProfileOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-700 cursor-pointer"><Settings size={16} /> {t('Settings', 'Mipangilio')}</Link>
-                        <div className="border-t border-gray-700 mt-1 pt-1">
-                          <button onClick={() => { setProfileOpen(false); handleLogout(); }} className="flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:bg-red-900/20 w-full rounded-b-xl cursor-pointer"><LogOut size={16} /> {t('Sign Out', 'Ondoka')}</button>
+
+                        <Link to="/sell" onClick={() => setProfileOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                          <DollarSign size={16} /> {t('Sell Property', 'Uza Mali')}
+                        </Link>
+                        <Link to="/messages" onClick={() => setProfileOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                          <MessageSquare size={16} /> {t('Messages', 'Jumbe')}
+                        </Link>
+                        <Link to="/settings" onClick={() => setProfileOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                          <Settings size={16} /> {t('Settings', 'Mipangilio')}
+                        </Link>
+
+                        <div className="border-t border-gray-100 dark:border-gray-700 mt-1 pt-1">
+                          <button onClick={() => { setProfileOpen(false); handleLogout(); }} className="flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors w-full">
+                            <LogOut size={16} /> {t('Sign Out', 'Ondoka')}
+                          </button>
                         </div>
                       </div>
                     )}
@@ -173,112 +264,160 @@ export default function Navbar() {
                 </>
               ) : (
                 <>
-                  <Link to="/auth/login"><Button variant="ghost" size="sm">{t('Sign In', 'Ingia')}</Button></Link>
-                  <Link to="/auth/register"><Button size="sm">{t('Get Started', 'Anza')}</Button></Link>
+                  <Link to="/auth/login">
+                    <Button variant="ghost" size="sm">{t('Sign In', 'Ingia')}</Button>
+                  </Link>
+                  <Link to="/auth/register">
+                    <Button size="sm">{t('Get Started', 'Anza')}</Button>
+                  </Link>
                 </>
               )}
             </div>
 
             {/* Mobile hamburger */}
-            <div className="flex lg:hidden items-center gap-2">
-              <button onClick={() => setLang(lang === 'en' ? 'sw' : 'en')} className="p-2 rounded-lg cursor-pointer">
-                <Globe size={18} className="text-gray-400" />
+            <div className="flex lg:hidden items-center gap-1">
+              <button onClick={toggleTheme} className="p-2 rounded-lg text-gray-500" aria-label="Toggle theme">
+                {theme === 'dark' ? <Sun size={18} className="text-amber-400" /> : <Moon size={18} />}
               </button>
-              <button onClick={() => setMobileOpen(!mobileOpen)} className="p-2 cursor-pointer">
-                {mobileOpen ? <X size={24} className="text-gray-300" /> : <Menu size={24} className="text-gray-300" />}
+              {isAuthenticated && (
+                <button onClick={() => setNotifOpen(!notifOpen)} className="p-2 rounded-lg text-gray-500 relative">
+                  <Bell size={18} />
+                  {unreadCount > 0 && (
+                    <span className="absolute top-1.5 right-1.5 min-w-[16px] h-[16px] px-1 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                      {unreadCount > 99 ? '99+' : unreadCount}
+                    </span>
+                  )}
+                </button>
+              )}
+              <button onClick={() => setMobileOpen(!mobileOpen)} className="p-2 rounded-lg" aria-label="Toggle menu">
+                {mobileOpen ? <X size={24} className="text-gray-700 dark:text-gray-300" /> : <Menu size={24} className="text-gray-700 dark:text-gray-300" />}
               </button>
             </div>
           </div>
         </div>
 
-        {/* Mobile slide-out menu */}
+        {/* Mobile slide-out */}
         {mobileOpen && (
-          <div className="lg:hidden border-t border-gray-800 px-4 py-3 space-y-1 bg-gray-900">
-            {navLinks.map((link) => (
-              <Link key={link.to} to={link.to} onClick={() => setMobileOpen(false)}
-                className={`flex items-center gap-2 px-3 py-2.5 text-sm font-medium rounded-lg cursor-pointer ${
-                  location.pathname.startsWith(link.to)
-                    ? 'bg-emerald-900/20 text-emerald-400'
-                    : 'text-gray-300 hover:bg-gray-800'
-                }`}>
-                <link.icon size={18} />{link.label}
-              </Link>
-            ))}
-            <hr className="my-2 border-gray-700" />
-            {isAuthenticated ? (
-              <>
-                {user?.role !== 'buyer' && (
-                  <Link to="/dashboard" onClick={() => setMobileOpen(false)} className="flex items-center gap-2 px-3 py-2.5 text-sm font-medium text-gray-300 rounded-lg hover:bg-gray-800 cursor-pointer">{t('Dashboard', 'Dashibodi')}</Link>
-                )}
-                <Link to="/market" onClick={() => setMobileOpen(false)} className="flex items-center gap-2 px-3 py-2.5 text-sm font-medium text-gray-300 rounded-lg hover:bg-gray-800 cursor-pointer">{t('Browse Properties', 'Vinjari Mali')}</Link>
-                <Link to="/notifications" onClick={() => setMobileOpen(false)} className="flex items-center gap-2 px-3 py-2.5 text-sm font-medium text-gray-300 rounded-lg hover:bg-gray-800 cursor-pointer">{t('Notifications', 'Arifa')}</Link>
-                <Link to="/settings" onClick={() => setMobileOpen(false)} className="flex items-center gap-2 px-3 py-2.5 text-sm font-medium text-gray-300 rounded-lg hover:bg-gray-800 cursor-pointer">{t('Settings', 'Mipangilio')}</Link>
-                <button onClick={handleLogout} className="flex items-center gap-2 px-3 py-2.5 text-sm font-medium text-red-400 rounded-lg hover:bg-red-900/20 w-full cursor-pointer">{t('Sign Out', 'Ondoka')}</button>
-              </>
-            ) : (
-              <div className="flex gap-2 pt-2">
-                <Link to="/auth/login" onClick={() => setMobileOpen(false)}><Button variant="outline" size="sm">{t('Sign In', 'Ingia')}</Button></Link>
-                <Link to="/auth/register" onClick={() => setMobileOpen(false)}><Button size="sm">{t('Get Started', 'Anza')}</Button></Link>
-              </div>
-            )}
+          <div className="lg:hidden border-t border-gray-100 dark:border-gray-800 bg-white/95 dark:bg-gray-950/95 backdrop-blur-xl animate-slide-down">
+            <div className="px-4 py-3 space-y-1 max-h-[70vh] overflow-y-auto">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  onClick={() => setMobileOpen(false)}
+                  className={`flex items-center gap-3 px-3 py-3 text-sm font-medium rounded-xl transition-colors ${
+                    isActive(link.to)
+                      ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400'
+                      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+                  }`}
+                >
+                  <link.icon size={18} />
+                  {link.label}
+                </Link>
+              ))}
+
+              <hr className="my-2 border-gray-100 dark:border-gray-800" />
+
+              {isAuthenticated ? (
+                <>
+                  {user?.role !== 'buyer' && (
+                    <Link to="/dashboard" onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-3 py-3 text-sm font-medium text-gray-600 dark:text-gray-400 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800">
+                      <LayoutDashboard size={18} /> {t('Dashboard', 'Dashibodi')}
+                    </Link>
+                  )}
+                  <Link to="/sell" onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-3 py-3 text-sm font-medium text-gray-600 dark:text-gray-400 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800">
+                    <DollarSign size={18} /> {t('Sell Property', 'Uza Mali')}
+                  </Link>
+                  <Link to="/notifications" onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-3 py-3 text-sm font-medium text-gray-600 dark:text-gray-400 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800">
+                    <Bell size={18} /> {t('Notifications', 'Arifa')}
+                  </Link>
+                  <Link to="/settings" onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-3 py-3 text-sm font-medium text-gray-600 dark:text-gray-400 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800">
+                    <Settings size={18} /> {t('Settings', 'Mipangilio')}
+                  </Link>
+                  <button onClick={() => { setMobileOpen(false); handleLogout(); }} className="flex items-center gap-3 px-3 py-3 text-sm font-medium text-red-500 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 w-full">
+                    <LogOut size={18} /> {t('Sign Out', 'Ondoka')}
+                  </button>
+                </>
+              ) : (
+                <div className="flex gap-2 pt-2">
+                  <Link to="/auth/login" onClick={() => setMobileOpen(false)}>
+                    <Button variant="outline" size="sm">{t('Sign In', 'Ingia')}</Button>
+                  </Link>
+                  <Link to="/auth/register" onClick={() => setMobileOpen(false)}>
+                    <Button size="sm">{t('Get Started', 'Anza')}</Button>
+                  </Link>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </nav>
 
-      {/* Mobile Bottom Navigation */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-gray-900/95 backdrop-blur-lg border-t border-gray-800 px-2 py-1.5">
+      {/* Mobile Bottom Nav */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 glass-premium border-t border-gray-200/50 dark:border-gray-800/50 px-2 py-2 safe-area-bottom">
         <div className="flex items-center justify-around max-w-lg mx-auto">
-          {(isAuthenticated && role !== 'buyer'
+          {(isAuthenticated && user?.role !== 'buyer'
             ? [
                 { to: '/', icon: Home, label: t('Home', 'Nyumbani') },
                 { to: '/market', icon: Search, label: t('Search', 'Tafuta') },
                 { to: '/dashboard', icon: LayoutDashboard, label: t('Dashboard', 'Dashibodi') },
-                { to: '/notifications', icon: Bell, label: t('Alerts', 'Arifa') },
+                { to: '/notifications', icon: Bell, label: t('Alerts', 'Arifa'), badge: unreadCount },
                 { to: '/settings', icon: User, label: t('Account', 'Akaunti') },
               ]
             : isAuthenticated
             ? [
                 { to: '/', icon: Home, label: t('Home', 'Nyumbani') },
                 { to: '/market', icon: Search, label: t('Search', 'Tafuta') },
-                { to: '#ai', icon: Sparkles, label: t('Ask AI', 'Uliza') },
+                { to: '#ai', icon: Sparkles, label: t('Ask AI', 'Uliza'), special: true },
                 { to: '/sell', icon: DollarSign, label: t('Sell', 'Uza') },
                 { to: '/settings', icon: User, label: t('Account', 'Akaunti') },
               ]
             : [
                 { to: '/', icon: Home, label: t('Home', 'Nyumbani') },
                 { to: '/market', icon: Search, label: t('Search', 'Tafuta') },
-                { to: '#ai', icon: Sparkles, label: t('Ask AI', 'Uliza') },
+                { to: '#ai', icon: Sparkles, label: t('Ask AI', 'Uliza'), special: true },
                 { to: '/auth/register', icon: User, label: t('Join', 'Jiunge') },
               ]
           ).map((item) => {
-            const isAi = item.to === '#ai';
-            return isAi ? (
-              <button
-                key={item.to}
-                onClick={() => {
-                  const aiBtn = document.querySelector('[class*="fixed bottom-6 right-6"]') as HTMLElement;
-                  aiBtn?.click();
-                }}
-                className="flex flex-col items-center gap-0.5 px-3 py-1.5 text-gray-400 rounded-lg cursor-pointer"
-              >
-                <item.icon size={20} />
-                <span className="text-[10px] font-medium">{item.label}</span>
-              </button>
-            ) : (
+            if (item.special) {
+              return (
+                <button
+                  key={item.to}
+                  onClick={() => {
+                    const aiBtn = document.querySelector('[class*="fixed bottom-6 right-6"]') as HTMLElement;
+                    aiBtn?.click();
+                  }}
+                  className="flex flex-col items-center gap-0.5 px-2 py-1 text-gray-400 rounded-xl relative -mt-5"
+                >
+                  <div className="w-11 h-11 bg-emerald-600 text-white rounded-full flex items-center justify-center shadow-lg shadow-emerald-500/25 hover:bg-emerald-700 transition-transform hover:scale-105 active:scale-95">
+                    <Sparkles size={20} />
+                  </div>
+                  <span className="text-[10px] font-medium">{item.label}</span>
+                </button>
+              );
+            }
+            return (
               <Link
                 key={item.to}
                 to={item.to}
-                className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-lg cursor-pointer ${
-                  location.pathname === item.to ? 'text-emerald-400' : 'text-gray-400'
+                className={`flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl relative ${
+                  location.pathname === item.to ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-400'
                 }`}
               >
                 <item.icon size={20} />
                 <span className="text-[10px] font-medium">{item.label}</span>
+                {item.badge && item.badge > 0 && (
+                  <span className="absolute -top-0.5 right-1 min-w-[16px] h-[16px] px-1 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                    {item.badge > 9 ? '9+' : item.badge}
+                  </span>
+                )}
               </Link>
             );
           })}
         </div>
       </div>
+
+      <NotificationCenter open={notifOpen} onClose={() => setNotifOpen(false)} />
     </>
   );
 }

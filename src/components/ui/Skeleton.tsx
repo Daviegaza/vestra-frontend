@@ -12,7 +12,7 @@ export function TextSkeleton() {
 
 export function PropertyCardSkeleton() {
   return (
-    <div className="bg-gray-800 rounded-2xl overflow-hidden border border-gray-700">
+    <div className="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700">
       <Skeleton className="h-52 w-full !rounded-none" />
       <div className="p-4 space-y-3">
         <Skeleton className="h-5 w-3/4" />
@@ -22,7 +22,7 @@ export function PropertyCardSkeleton() {
           <Skeleton className="h-3 w-12" />
           <Skeleton className="h-3 w-16" />
         </div>
-        <div className="flex justify-between pt-2 border-t border-gray-700">
+        <div className="flex justify-between pt-2 border-t border-gray-100 dark:border-gray-700">
           <Skeleton className="h-3 w-16" />
           <Skeleton className="h-5 w-20 rounded-full" />
         </div>
@@ -43,7 +43,7 @@ export function PropertyGridSkeleton({ count = 6 }: { count?: number }) {
 
 export function StatCardSkeleton() {
   return (
-    <div className="bg-gray-800 rounded-2xl border border-gray-700 p-5">
+    <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-5">
       <Skeleton className="h-3 w-20 mb-3" />
       <Skeleton className="h-8 w-24 mb-2" />
       <Skeleton className="h-3 w-16" />
@@ -54,15 +54,22 @@ export function StatCardSkeleton() {
 export function DashboardSkeleton() {
   return (
     <div className="space-y-8">
-      <div>
-        <Skeleton className="h-8 w-48 mb-2" />
-        <Skeleton className="h-4 w-64" />
+      <div className="flex items-center justify-between">
+        <div>
+          <Skeleton className="h-8 w-48 mb-2" />
+          <Skeleton className="h-4 w-64" />
+        </div>
+        <Skeleton className="h-10 w-32 rounded-xl" />
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCardSkeleton />
         <StatCardSkeleton />
         <StatCardSkeleton />
         <StatCardSkeleton />
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Skeleton className="h-64 w-full rounded-2xl" />
+        <Skeleton className="h-64 w-full rounded-2xl" />
       </div>
     </div>
   );
@@ -98,7 +105,7 @@ export function TableSkeleton({ rows = 5 }: { rows?: number }) {
   return (
     <div className="space-y-2">
       {Array.from({ length: rows }).map((_, i) => (
-        <div key={i} className="flex gap-4 p-4 bg-gray-800 rounded-lg border border-gray-700">
+        <div key={i} className="flex gap-4 p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
           <Skeleton className="h-10 w-10 rounded-full" />
           <div className="flex-1 space-y-2">
             <Skeleton className="h-4 w-1/3" />
@@ -114,13 +121,22 @@ export function AgentGridSkeleton({ count = 4 }: { count?: number }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="bg-gray-800 rounded-xl border border-gray-700 p-6 space-y-4 text-center">
+        <div key={i} className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 space-y-4 text-center">
           <Skeleton className="h-20 w-20 rounded-full mx-auto" />
           <Skeleton className="h-5 w-32 mx-auto" />
           <Skeleton className="h-4 w-24 mx-auto" />
           <Skeleton className="h-6 w-20 rounded-full mx-auto" />
         </div>
       ))}
+    </div>
+  );
+}
+
+export function ChartSkeleton({ className = '' }: { className?: string }) {
+  return (
+    <div className={`bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 ${className}`}>
+      <Skeleton className="h-5 w-32 mb-4" />
+      <Skeleton className="h-48 w-full rounded-lg" />
     </div>
   );
 }

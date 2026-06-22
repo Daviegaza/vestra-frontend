@@ -1,6 +1,6 @@
 import { Check, Star } from 'lucide-react';
 import { useState } from 'react';
-import DashboardShell from '../../components/layout/DashboardShell';
+
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import Modal from '../../components/ui/Modal';
@@ -46,7 +46,7 @@ export default function Subscription() {
   };
 
   return (
-    <DashboardShell>
+    <>
       <div className="space-y-8">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Subscription</h1>
@@ -137,6 +137,6 @@ export default function Subscription() {
           />
         )}
       </Modal>
-    </DashboardShell>
+    </>
   );
 }

@@ -1,5 +1,5 @@
 import { Users, DollarSign, Home, Target } from 'lucide-react';
-import DashboardShell from '../../components/layout/DashboardShell';
+
 import StatCard from '../../components/dashboard/StatCard';
 import Card from '../../components/ui/Card';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
@@ -31,7 +31,7 @@ const topAgents = [
 
 export default function Analytics() {
   return (
-    <DashboardShell>
+
       <div className="space-y-8">
         <div>
           <h1 className="text-2xl font-bold text-white">Analytics</h1>
@@ -126,6 +126,6 @@ export default function Analytics() {
           </div>
         </Card>
       </div>
-    </DashboardShell>
+
   );
 }

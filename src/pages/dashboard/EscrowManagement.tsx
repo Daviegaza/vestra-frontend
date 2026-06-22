@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Shield, TrendingUp, AlertTriangle, CheckCircle, Clock, Ban, RefreshCw, CreditCard } from 'lucide-react';
-import DashboardShell from '../../components/layout/DashboardShell';
+
 import StatCard from '../../components/dashboard/StatCard';
 import Card, { Badge } from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
@@ -50,7 +50,7 @@ export default function EscrowManagement() {
   };
 
   return (
-    <DashboardShell>
+    <>
       <div className="space-y-8">
         <div className="flex items-center justify-between">
           <div>
@@ -200,6 +200,6 @@ export default function EscrowManagement() {
           </div>
         </div>
       </Modal>
-    </DashboardShell>
+    </>
   );
 }
