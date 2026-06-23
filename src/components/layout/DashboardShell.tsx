@@ -5,9 +5,11 @@ import {
   LayoutDashboard, Home, Users, UserCheck,
   Wrench, CreditCard, Star, TrendingUp, MessageSquare,
   Shield, Settings, LogOut, Building, PlusCircle, List,
-  Receipt, Crown,
+  Receipt, Crown, Menu, X,
 } from 'lucide-react';
 import type { ComponentType } from 'react';
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface NavItem {
   to: string;
@@ -87,32 +89,47 @@ const roleNavs: Record<DashboardRole, { primary: NavItem[]; secondary: NavItem[]
   },
 };
 
-export default function DashboardShell({ children }: { children: React.ReactNode }) {
-  const { user, logout } = useAuthStore();
-  const navigate = useNavigate();
-  const location = useLocation();
-  const role = (user?.role || 'seller') as DashboardRole;
-  const nav = roleNavs[role] || roleNavs.seller;
-
-  const handleLogout = () => {
-    logout();
-    navigate('/');
-  };
-
-  const isActive = (path: string) => location.pathname === path;
-
+function SidebarContent({
+  role,
+  nav,
+  isActive,
+  handleLogout,
+}: {
+  role: DashboardRole;
+  nav: { primary: NavItem[]; secondary: NavItem[] };
+  isActive: (path: string) => boolean;
+  handleLogout: () => void;
+}) {
   return (
-    <div className="flex min-h-[calc(100vh-64px)]">
-      <aside className="flex flex-col w-64 lg:w-72 border-r border-gray-800 bg-gray-900 p-4">
-        <div className="mb-6 px-2">
-          <span className="inline-block px-3 py-1 bg-emerald-900/30 text-emerald-400 rounded-full text-xs font-semibold uppercase tracking-wider">
-            {user?.role} Dashboard
-          </span>
+    <>
+      <div className="mb-6 px-2">
+        <span className="inline-block px-3 py-1 bg-emerald-900/30 text-emerald-400 rounded-full text-xs font-semibold uppercase tracking-wider">
+          {role} Dashboard
+        </span>
+      </div>
+
+      <nav className="flex-1 space-y-5">
+        <div className="space-y-1">
+          {nav.primary.map((item) => (
+            <Link
+              key={item.to}
+              to={item.to}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
+                isActive(item.to)
+                  ? 'bg-emerald-900/30 text-emerald-400'
+                  : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+              }`}
+            >
+              <item.icon size={18} />
+              {item.label}
+            </Link>
+          ))}
         </div>
 
-        <nav className="flex-1 space-y-5">
+        <div>
+          <p className="px-3 text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">More</p>
           <div className="space-y-1">
-            {nav.primary.map((item) => (
+            {nav.secondary.map((item) => (
               <Link
                 key={item.to}
                 to={item.to}
@@ -127,38 +144,96 @@ export default function DashboardShell({ children }: { children: React.ReactNode
               </Link>
             ))}
           </div>
+        </div>
+      </nav>
 
-          <div>
-            <p className="px-3 text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">More</p>
-            <div className="space-y-1">
-              {nav.secondary.map((item) => (
-                <Link
-                  key={item.to}
-                  to={item.to}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
-                    isActive(item.to)
-                      ? 'bg-emerald-900/30 text-emerald-400'
-                      : 'text-gray-400 hover:bg-gray-800 hover:text-white'
-                  }`}
-                >
-                  <item.icon size={18} />
-                  {item.label}
-                </Link>
-              ))}
-            </div>
-          </div>
-        </nav>
+      <button
+        onClick={handleLogout}
+        className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-red-400 hover:bg-red-900/20 transition-colors cursor-pointer"
+      >
+        <LogOut size={18} />
+        Sign Out
+      </button>
+    </>
+  );
+}
 
-        <button
-          onClick={handleLogout}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-red-400 hover:bg-red-900/20 transition-colors cursor-pointer"
-        >
-          <LogOut size={18} />
-          Sign Out
-        </button>
+export default function DashboardShell({ children }: { children: React.ReactNode }) {
+  const { user, logout } = useAuthStore();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const role = (user?.role || 'seller') as DashboardRole;
+  const nav = roleNavs[role] || roleNavs.seller;
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
+
+  const isActive = (path: string) => location.pathname === path;
+
+  return (
+    <div className="flex min-h-screen">
+      {/* Desktop Sidebar */}
+      <aside className="hidden lg:flex flex-col w-64 lg:w-72 border-r border-gray-800 bg-gray-900 p-4">
+        <SidebarContent role={role} nav={nav} isActive={isActive} handleLogout={handleLogout} />
       </aside>
 
+      {/* Mobile Sidebar Drawer */}
+      <AnimatePresence>
+        {sidebarOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              className="fixed inset-0 z-40 bg-black/30 lg:hidden"
+              onClick={() => setSidebarOpen(false)}
+            />
+            <motion.div
+              initial={{ x: -280 }}
+              animate={{ x: 0 }}
+              exit={{ x: -280 }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
+              className="fixed left-0 top-0 bottom-0 z-50 lg:hidden"
+            >
+              <aside className="flex flex-col w-64 h-full border-r border-gray-800 bg-gray-900 p-4">
+                {/* Close button */}
+                <button
+                  onClick={() => setSidebarOpen(false)}
+                  className="self-end p-1.5 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white transition-colors lg:hidden"
+                  aria-label="Close menu"
+                >
+                  <X size={20} />
+                </button>
+                <SidebarContent role={role} nav={nav} isActive={isActive} handleLogout={handleLogout} />
+              </aside>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Content area */}
       <div className="flex-1 overflow-y-auto bg-gray-950">
+        {/* Mobile top bar */}
+        <div className="lg:hidden flex items-center h-14 px-4 border-b border-gray-800">
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="p-2 rounded-lg text-gray-400 hover:bg-gray-800 transition-colors"
+            aria-label="Open menu"
+          >
+            <Menu size={20} />
+          </button>
+          <Link to="/" className="flex items-center gap-2 font-bold text-lg ml-2">
+            <div className="w-7 h-7 bg-emerald-600 rounded-lg flex items-center justify-center">
+              <Building size={14} className="text-white" />
+            </div>
+            <span className="text-emerald-400">Vestra</span>
+          </Link>
+        </div>
+
         <div className="p-6 lg:p-8 max-w-7xl mx-auto">{children}</div>
       </div>
     </div>

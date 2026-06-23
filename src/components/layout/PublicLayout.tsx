@@ -23,7 +23,7 @@ export default function PublicLayout() {
   return (
     <div className="min-h-screen bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 transition-colors duration-300">
       <Navbar />
-      <main>
+      <main className="public-main">
         <Suspense fallback={<PageLoader />}>
           <Outlet />
         </Suspense>

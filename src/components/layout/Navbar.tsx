@@ -45,6 +45,9 @@ export default function Navbar() {
 
   useEffect(() => { localStorage.setItem('vestra_lang', lang); }, [lang]);
 
+  // Close mobile menu on route change
+  useEffect(() => { setMobileOpen(false); }, [location.pathname]);
+
   const handleLogout = () => {
     logout();
     setProfileOpen(false);
@@ -296,9 +299,18 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* Mobile slide-out */}
-        {mobileOpen && (
-          <div className="lg:hidden border-t border-gray-100 dark:border-gray-800 bg-white/95 dark:bg-gray-950/95 backdrop-blur-xl animate-slide-down">
+      </nav>
+
+      {/* Mobile slide-out overlay */}
+      {mobileOpen && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="lg:hidden fixed inset-0 z-40 bg-black/30 animate-fade-in"
+            onClick={() => setMobileOpen(false)}
+          />
+          {/* Slide-out panel */}
+          <div className="lg:hidden fixed top-16 left-0 right-0 z-50 bg-white dark:bg-gray-950 border-t border-gray-100 dark:border-gray-800 animate-slide-down shadow-xl">
             <div className="px-4 py-3 space-y-1 max-h-[70vh] overflow-y-auto">
               {navLinks.map((link) => (
                 <Link
@@ -350,11 +362,11 @@ export default function Navbar() {
               )}
             </div>
           </div>
-        )}
-      </nav>
+        </>
+      )}
 
       {/* Mobile Bottom Nav */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 glass-premium border-t border-gray-200/50 dark:border-gray-800/50 px-2 py-2 safe-area-bottom">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 glass-premium border-t border-gray-200/50 dark:border-gray-800/50 px-2 py-2 safe-area-bottom">
         <div className="flex items-center justify-around max-w-lg mx-auto">
           {(isAuthenticated && user?.role !== 'buyer'
             ? [

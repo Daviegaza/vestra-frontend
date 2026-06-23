@@ -398,8 +398,8 @@ html.dark body {
 .bg-whatsapp { background-color: #25D366; }
 
 /* ===== Mobile Bottom Nav Spacer ===== */
-@media (max-width: 768px) {
-  main {
+@media (max-width: 1023px) {
+  .public-main {
     padding-bottom: 72px;
   }
 }
