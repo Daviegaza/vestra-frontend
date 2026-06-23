@@ -370,25 +370,25 @@ export default function Navbar() {
         <div className="flex items-center justify-around max-w-lg mx-auto">
           {(isAuthenticated && user?.role !== 'buyer'
             ? [
-                { to: '/', icon: Home, label: t('Home', 'Nyumbani') },
-                { to: '/market', icon: Search, label: t('Search', 'Tafuta') },
-                { to: '/dashboard', icon: LayoutDashboard, label: t('Dashboard', 'Dashibodi') },
-                { to: '/notifications', icon: Bell, label: t('Alerts', 'Arifa'), badge: unreadCount },
-                { to: '/settings', icon: User, label: t('Account', 'Akaunti') },
+                { to: '/', icon: Home, label: t('Home', 'Nyumbani'), special: undefined as boolean | undefined, badge: undefined as number | undefined },
+                { to: '/market', icon: Search, label: t('Search', 'Tafuta'), special: undefined as boolean | undefined, badge: undefined as number | undefined },
+                { to: '/dashboard', icon: LayoutDashboard, label: t('Dashboard', 'Dashibodi'), special: undefined as boolean | undefined, badge: undefined as number | undefined },
+                { to: '/notifications', icon: Bell, label: t('Alerts', 'Arifa'), badge: unreadCount, special: undefined as boolean | undefined },
+                { to: '/settings', icon: User, label: t('Account', 'Akaunti'), special: undefined as boolean | undefined, badge: undefined as number | undefined },
               ]
             : isAuthenticated
             ? [
-                { to: '/', icon: Home, label: t('Home', 'Nyumbani') },
-                { to: '/market', icon: Search, label: t('Search', 'Tafuta') },
-                { to: '#ai', icon: Sparkles, label: t('Ask AI', 'Uliza'), special: true },
-                { to: '/sell', icon: DollarSign, label: t('Sell', 'Uza') },
-                { to: '/settings', icon: User, label: t('Account', 'Akaunti') },
+                { to: '/', icon: Home, label: t('Home', 'Nyumbani'), special: undefined as boolean | undefined, badge: undefined as number | undefined },
+                { to: '/market', icon: Search, label: t('Search', 'Tafuta'), special: undefined as boolean | undefined, badge: undefined as number | undefined },
+                { to: '#ai', icon: Sparkles, label: t('Ask AI', 'Uliza'), special: true, badge: undefined as number | undefined },
+                { to: '/sell', icon: DollarSign, label: t('Sell', 'Uza'), special: undefined as boolean | undefined, badge: undefined as number | undefined },
+                { to: '/settings', icon: User, label: t('Account', 'Akaunti'), special: undefined as boolean | undefined, badge: undefined as number | undefined },
               ]
             : [
-                { to: '/', icon: Home, label: t('Home', 'Nyumbani') },
-                { to: '/market', icon: Search, label: t('Search', 'Tafuta') },
-                { to: '#ai', icon: Sparkles, label: t('Ask AI', 'Uliza'), special: true },
-                { to: '/auth/register', icon: User, label: t('Join', 'Jiunge') },
+                { to: '/', icon: Home, label: t('Home', 'Nyumbani'), special: undefined as boolean | undefined, badge: undefined as number | undefined },
+                { to: '/market', icon: Search, label: t('Search', 'Tafuta'), special: undefined as boolean | undefined, badge: undefined as number | undefined },
+                { to: '#ai', icon: Sparkles, label: t('Ask AI', 'Uliza'), special: true, badge: undefined as number | undefined },
+                { to: '/auth/register', icon: User, label: t('Join', 'Jiunge'), special: undefined as boolean | undefined, badge: undefined as number | undefined },
               ]
           ).map((item) => {
             if (item.special) {

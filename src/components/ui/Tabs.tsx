@@ -48,7 +48,7 @@ export default function Tabs({ tabs, defaultTab, onChange, variant = 'underline'
                     transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                   />
                 )}
-                {Icon && <Icon size={14} className="relative z-10" />}
+                {Icon && <span className="relative z-10"><Icon size={14} /></span>}
                 <span className="relative z-10">{tab.label}</span>
                 {tab.count !== undefined && (
                   <span className={`relative z-10 text-xs px-1.5 py-0.5 rounded-full ${active === tab.key ? 'bg-gray-200 dark:bg-gray-600' : 'bg-gray-200 dark:bg-gray-700'}`}>

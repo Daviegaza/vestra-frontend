@@ -152,7 +152,9 @@ export default function Sidebar() {
                     : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'
                 }`}
               >
-                <item.icon size={18} className="shrink-0" />
+                <span className="shrink-0">
+                  <item.icon size={18} />
+                </span>
                 <span className="truncate">{item.label}</span>
                 {item.badge && (
                   <span className="ml-auto text-[10px] px-1.5 py-0.5 bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 rounded-full font-semibold">
@@ -180,7 +182,9 @@ export default function Sidebar() {
                       : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'
                   }`}
                 >
-                  <item.icon size={18} className="shrink-0" />
+                  <span className="shrink-0">
+                  <item.icon size={18} />
+                </span>
                   <span className="truncate">{item.label}</span>
                 </Link>
               ))}

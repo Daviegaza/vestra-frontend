@@ -62,7 +62,7 @@ export default function Dropdown({ trigger, items, align = 'right', width = 'md'
                 {item.href ? (
                   <a
                     href={item.href}
-                    onClick={(e) => {
+                    onClick={() => {
                       item.onClick?.();
                       setOpen(false);
                     }}
