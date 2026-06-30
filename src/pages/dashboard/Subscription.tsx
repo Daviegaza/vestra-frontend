@@ -1,142 +1,222 @@
-import { Check, Star } from 'lucide-react';
-import { useState } from 'react';
-
+import { useEffect, useState } from 'react';
+import { Check, Loader2, Crown, Sparkles, X, BadgeCheck } from 'lucide-react';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
-import Modal from '../../components/ui/Modal';
-import MPesaPayment from '../../components/payment/MPesaPayment';
-import { useSubscriptionStore, tierPrices, tierFeatures, type SubscriptionTier } from '../../store/subscriptionStore';
+import { useAuthStore } from '../../store/authStore';
 import { toast } from '../../store/toastStore';
+import {
+  getCatalog,
+  getMySubscriptions,
+  subscribe,
+  cancelSubscription,
+  type TierEntry,
+  type Subscription,
+  type SubscriptionTier,
+} from '../../services/subscriptions';
+import type { UserRole } from '../../types';
+import PaymentMethodPicker from '../../components/payment/PaymentMethodPicker';
+import type { PaymentMethod } from '../../lib/paymentMethods';
 
-const tiers: { key: SubscriptionTier; name: string; color: string }[] = [
-  { key: 'free', name: 'Free', color: 'text-gray-400' },
-  { key: 'basic', name: 'Basic', color: 'text-blue-400' },
-  { key: 'pro', name: 'Pro', color: 'text-emerald-400' },
-  { key: 'premium', name: 'Premium', color: 'text-amber-400' },
+const ROLES_WITH_TIERS: { role: UserRole; label: string }[] = [
+  { role: 'agent', label: 'Agent' },
+  { role: 'landlord', label: 'Landlord' },
+  { role: 'buyer', label: 'Buyer (Member)' },
 ];
 
-const features = [
-  { label: 'Property Listings', key: 'listings' as const },
-  { label: 'Featured Listings', key: 'featured' as const },
-  { label: 'Verification Reports', key: 'verification' as const },
-  { label: 'Analytics', key: 'analytics' as const },
-  { label: 'Lead Management', key: 'leads' as const },
-  { label: 'Directory Placement', key: 'placement' as const },
-  { label: 'Commission Rate', key: 'commission' as const },
-];
+export default function SubscriptionPage() {
+  const user = useAuthStore((s) => s.user);
+  const [catalog, setCatalog] = useState<TierEntry[]>([]);
+  const [subs, setSubs] = useState<Subscription[]>([]);
+  const [selectedRole, setSelectedRole] = useState<UserRole>('agent');
+  const [busy, setBusy] = useState<SubscriptionTier | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [payOpen, setPayOpen] = useState(false);
+  const [pendingTier, setPendingTier] = useState<TierEntry | null>(null);
 
-export default function Subscription() {
-  const { tier, upgrade } = useSubscriptionStore();
-  const [selectedTier, setSelectedTier] = useState<SubscriptionTier | null>(null);
-  const [showPayment, setShowPayment] = useState(false);
-
-  const handleUpgrade = (tier: SubscriptionTier) => {
-    if (tier === 'free') return;
-    setSelectedTier(tier);
-    setShowPayment(true);
+  const refresh = async () => {
+    setLoading(true);
+    try {
+      const [c, s] = await Promise.all([getCatalog(), getMySubscriptions().catch(() => [])]);
+      setCatalog(c);
+      setSubs(s);
+    } finally { setLoading(false); }
   };
 
-  const handlePaymentSuccess = () => {
-    if (selectedTier) {
-      upgrade(selectedTier);
-      toast.success(`Upgraded to ${selectedTier} tier!`);
+  useEffect(() => { void refresh(); }, []);
+
+  useEffect(() => {
+    if (user?.activeRole && ['agent', 'landlord', 'buyer'].includes(user.activeRole)) {
+      setSelectedRole(user.activeRole);
     }
-    setShowPayment(false);
-    setSelectedTier(null);
+  }, [user?.activeRole]);
+
+  const tiersForRole = catalog.filter((t) => t.role === selectedRole);
+  const currentSubForRole = subs.find((s) => s.role === selectedRole && s.status === 'active');
+  const currentTier = currentSubForRole?.tier || 'free';
+
+  const handleSubscribe = async (entry: TierEntry) => {
+    if (entry.tier === currentTier) return;
+    if (entry.priceKes === 0) {
+      // Downgrade — no payment required.
+      setBusy(entry.tier);
+      try {
+        await subscribe(entry.role, entry.tier, {});
+        toast.success(`${entry.label} plan active.`);
+        await refresh();
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : 'Subscription failed');
+      } finally { setBusy(null); }
+      return;
+    }
+    setPendingTier(entry);
+    setPayOpen(true);
+  };
+
+  const handlePay = async (method: PaymentMethod, ref: string) => {
+    if (!pendingTier) return;
+    setBusy(pendingTier.tier);
+    try {
+      await subscribe(pendingTier.role, pendingTier.tier, { paymentMethod: method, paymentRef: ref });
+      toast.success(`${pendingTier.label} plan active.`);
+      await refresh();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Subscription failed');
+    } finally {
+      setBusy(null);
+      setPendingTier(null);
+    }
+  };
+
+  const handleCancel = async (role: UserRole) => {
+    if (!confirm('Cancel this subscription? You keep access until the period ends.')) return;
+    try {
+      await cancelSubscription(role);
+      toast.info('Subscription cancelled');
+      await refresh();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Cancel failed');
+    }
   };
 
   return (
-    <>
-      <div className="space-y-8">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Subscription</h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">Current plan: <span className="font-semibold text-emerald-400 capitalize">{tier}</span></p>
+    <div className="space-y-6">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-600 via-emerald-700 to-teal-800 p-6 sm:p-8 text-white">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 right-0 w-72 h-72 bg-white rounded-full blur-3xl" />
         </div>
+        <div className="relative z-10 space-y-2 max-w-2xl">
+          <div className="flex items-center gap-2 text-emerald-100 text-xs font-semibold uppercase tracking-wider">
+            <Crown size={14} /> Vestra Plans
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-black">Pick the plan that grows with you.</h1>
+          <p className="text-sm text-emerald-50/90">Start free. Upgrade when your portfolio needs it. M-Pesa-billed in KES, cancel anytime.</p>
+        </div>
+      </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {tiers.map((t) => {
-            const isCurrent = tier === t.key;
-            const f = tierFeatures[t.key];
+      <div className="flex items-center gap-2 flex-wrap">
+        {ROLES_WITH_TIERS.map((r) => {
+          const sub = subs.find((s) => s.role === r.role && s.status === 'active');
+          return (
+            <button
+              key={r.role}
+              onClick={() => setSelectedRole(r.role)}
+              className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+                selectedRole === r.role
+                  ? 'bg-emerald-600 text-white shadow'
+                  : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+              }`}
+            >
+              {r.label}
+              {sub && <span className="ml-2 text-[10px] bg-white/20 px-1.5 py-0.5 rounded uppercase">{sub.tier}</span>}
+            </button>
+          );
+        })}
+      </div>
+
+      {currentSubForRole && (
+        <Card className="bg-emerald-50/50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-900/30">
+          <div className="flex items-start justify-between gap-3 flex-wrap">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center">
+                <BadgeCheck size={20} />
+              </div>
+              <div>
+                <p className="font-bold text-gray-900 dark:text-white capitalize">{currentSubForRole.tier} plan — {selectedRole}</p>
+                <p className="text-xs text-gray-500">Renews {new Date(currentSubForRole.expiresAt).toLocaleDateString()} · KES {Number(currentSubForRole.priceKes).toLocaleString()}/{currentSubForRole.periodDays}d · {currentSubForRole.autoRenew ? 'Auto-renew on' : 'Will not renew'}</p>
+              </div>
+            </div>
+            {currentSubForRole.tier !== 'free' && (
+              <Button size="sm" variant="outline" onClick={() => handleCancel(selectedRole)}>
+                <X size={14} /> Cancel
+              </Button>
+            )}
+          </div>
+        </Card>
+      )}
+
+      {loading ? (
+        <p className="text-center text-sm text-gray-400">Loading plans…</p>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {tiersForRole.map((entry) => {
+            const isCurrent = entry.tier === currentTier;
+            const isPopular = entry.tier === 'pro' || entry.tier === 'buyer_pro';
             return (
-              <Card key={t.key} className={`p-6 space-y-4 ${isCurrent ? 'ring-2 ring-emerald-500' : ''}`}>
-                <div className="text-center space-y-2">
-                  <h3 className={`font-bold text-lg ${t.color}`}>{t.name}</h3>
-                  <p className="text-3xl font-black text-gray-900 dark:text-white">
-                    KES {tierPrices[t.key].toLocaleString()}
-                  </p>
-                  <p className="text-xs text-gray-500">per month</p>
-                </div>
-                <div className="space-y-2 text-sm">
-                  {features.map((feat) => (
-                    <div key={feat.key} className="flex items-center gap-2">
-                      <Check size={14} className="text-emerald-500 shrink-0" />
-                      <span className="text-gray-600 dark:text-gray-400">{feat.label}:</span>
-                      <span className="font-medium text-gray-900 dark:text-white ml-auto text-right">
-                        {String(f[feat.key])}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-                {isCurrent ? (
-                  <Button disabled className="w-full">Current Plan</Button>
-                ) : (
-                  <Button onClick={() => handleUpgrade(t.key)} className="w-full" variant={t.key === 'premium' ? 'primary' : 'outline'}>
-                    {t.key === 'premium' && <Star size={14} className="mr-1" />}
-                    Upgrade to {t.name}
-                  </Button>
+              <Card key={entry.tier} className={`relative flex flex-col ${isCurrent ? 'ring-2 ring-emerald-500' : ''} ${isPopular ? 'border-2 border-emerald-400' : ''}`}>
+                {isPopular && (
+                  <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-2.5 py-0.5 bg-emerald-600 text-white text-[10px] font-bold uppercase tracking-wider rounded-full flex items-center gap-1">
+                    <Sparkles size={10} /> Most popular
+                  </span>
                 )}
+                <h3 className="font-bold text-gray-900 dark:text-white text-lg">{entry.label}</h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 min-h-[2em]">{entry.description}</p>
+                <div className="mt-3 mb-3">
+                  <span className="text-3xl font-black text-gray-900 dark:text-white">
+                    {entry.priceKes === 0 ? 'Free' : `KES ${entry.priceKes.toLocaleString()}`}
+                  </span>
+                  {entry.priceKes > 0 && entry.tier !== 'buyer_verified' && (
+                    <span className="text-xs text-gray-500"> /month</span>
+                  )}
+                  {entry.tier === 'buyer_verified' && (
+                    <span className="text-xs text-gray-500"> one-off</span>
+                  )}
+                </div>
+                <ul className="space-y-1.5 flex-1 mb-4">
+                  {entry.perks.map((perk) => (
+                    <li key={perk} className="text-sm text-gray-600 dark:text-gray-400 flex items-start gap-1.5">
+                      <Check size={14} className="mt-0.5 shrink-0 text-emerald-500" />
+                      {perk}
+                    </li>
+                  ))}
+                </ul>
+                <Button
+                  size="sm"
+                  className={isCurrent ? 'w-full bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300 cursor-default' : 'w-full bg-emerald-600 hover:bg-emerald-700 text-white'}
+                  disabled={isCurrent || busy === entry.tier}
+                  onClick={() => handleSubscribe(entry)}
+                >
+                  {busy === entry.tier ? <Loader2 size={14} className="animate-spin" />
+                    : isCurrent ? 'Current plan'
+                    : entry.priceKes === 0 ? 'Downgrade to free'
+                    : `Subscribe — KES ${entry.priceKes.toLocaleString()}`}
+                </Button>
               </Card>
             );
           })}
         </div>
+      )}
 
-        <Card className="p-6">
-          <h3 className="font-semibold text-gray-900 dark:text-white mb-4">Plan Comparison</h3>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-gray-200 dark:border-gray-700">
-                  <th className="text-left py-2 font-medium text-gray-500">Feature</th>
-                  {tiers.map((t) => (
-                    <th key={t.key} className={`text-center py-2 font-medium ${t.color}`}>{t.name}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {features.map((feat) => (
-                  <tr key={feat.key} className="border-b border-gray-100 dark:border-gray-700/50">
-                    <td className="py-3 text-gray-700 dark:text-gray-300">{feat.label}</td>
-                    {tiers.map((t) => (
-                      <td key={t.key} className="text-center py-3 text-gray-900 dark:text-white font-medium">
-                        {String(tierFeatures[t.key][feat.key])}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-                <tr className="border-b border-gray-100 dark:border-gray-700/50">
-                  <td className="py-3 text-gray-700 dark:text-gray-300">Price</td>
-                  {tiers.map((t) => (
-                    <td key={t.key} className="text-center py-3 text-gray-900 dark:text-white font-bold">
-                      KES {tierPrices[t.key].toLocaleString()}/mo
-                    </td>
-                  ))}
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </Card>
-      </div>
+      <p className="text-xs text-gray-400 text-center">
+        Pay with M-Pesa, Airtel Money, Card, Bank Transfer, PesaLink, Equitel, PayPal, Flutterwave, IntaSend or Cash. Sandbox mode active until provider keys are connected.
+      </p>
 
-      <Modal open={showPayment} onClose={() => setShowPayment(false)} title={`Upgrade to ${selectedTier || ''}`}>
-        {selectedTier && (
-          <MPesaPayment
-            amount={tierPrices[selectedTier]}
-            description={`${selectedTier} subscription — Monthly`}
-            onSuccess={handlePaymentSuccess}
-            onCancel={() => setShowPayment(false)}
-          />
-        )}
-      </Modal>
-    </>
+      <PaymentMethodPicker
+        open={payOpen}
+        onClose={() => { setPayOpen(false); setPendingTier(null); }}
+        amount={pendingTier?.priceKes || 0}
+        context={pendingTier ? `${pendingTier.label} plan — ${pendingTier.role}` : ''}
+        onPay={handlePay}
+      />
+    </div>
   );
 }

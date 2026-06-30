@@ -57,12 +57,31 @@ export interface Agent {
   joinedAt: string;
 }
 
+export type RoleStatus = 'active' | 'pending' | 'suspended';
+
+export interface RoleProfile {
+  role: UserRole;
+  status: RoleStatus;
+  activatedAt: string;
+  /** Role-specific metadata captured during activation. */
+  meta?: Record<string, string | number | boolean>;
+}
+
 export interface User {
   id: string;
   email: string;
   fullName: string;
   phone: string;
-  role: UserRole;
+  /** All roles the user has activated. Always contains at least 'buyer' at runtime. */
+  roles: UserRole[];
+  /** The role whose dashboard/nav is currently in view. */
+  activeRole: UserRole;
+  /** Per-role metadata (license #, agency, units, etc.). */
+  roleProfiles?: RoleProfile[];
+  /**
+   * @deprecated Kept for back-compat with legacy storage. Mirrors activeRole.
+   */
+  role?: UserRole;
   avatar?: string;
   isVerified: boolean;
   isKycVerified: boolean;

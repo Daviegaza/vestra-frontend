@@ -1,51 +1,164 @@
 import { create } from 'zustand';
-import type { User } from '../types';
+import type { User, UserRole } from '../types';
+import { apiRequest, setToken, getToken, ApiError } from '../services/api';
 
 interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
+  loading: boolean;
+  /** Legacy sync login for demo accounts (kept for back-compat — uses backend). */
   login: (email: string, password: string) => boolean;
+  loginAsync: (email: string, password: string) => Promise<User>;
+  registerAsync: (data: { email: string; password: string; fullName: string; phone: string }) => Promise<User>;
   logout: () => void;
+  activateRole: (role: UserRole, meta?: Record<string, string | number | boolean>) => Promise<void>;
+  switchRole: (role: UserRole) => Promise<void>;
+  removeRole: (role: UserRole) => Promise<void>;
+  updateUser: (patch: Partial<User>) => Promise<void>;
 }
 
-const demoUsers: (User & { password: string })[] = [
-  { id: 'user-001', email: 'buyer@vestra.com', fullName: 'John Doe', phone: '+254711111111', role: 'buyer', isVerified: true, isKycVerified: true, location: 'Nairobi', password: 'password' },
-  { id: 'user-002', email: 'seller@vestra.com', fullName: 'Jane Muthoni', phone: '+254722222222', role: 'seller', isVerified: true, isKycVerified: true, location: 'Karen', password: 'password' },
-  { id: 'user-003', email: 'landlord@vestra.com', fullName: 'Sammy Ndungu', phone: '+254733333333', role: 'landlord', isVerified: true, isKycVerified: true, location: 'Kilimani', password: 'password' },
-  { id: 'user-004', email: 'tenant@vestra.com', fullName: 'Mary Wanjiru', phone: '+254744444444', role: 'tenant', isVerified: true, isKycVerified: false, location: 'Westlands', password: 'password' },
-  { id: 'user-005', email: 'agent@vestra.com', fullName: 'Wanjiku Mwangi', phone: '+254755555555', role: 'agent', isVerified: true, isKycVerified: true, location: 'Nairobi', password: 'password' },
-  { id: 'user-006', email: 'admin@vestra.com', fullName: 'Admin User', phone: '+254766666666', role: 'admin', isVerified: true, isKycVerified: true, location: 'Nairobi', password: 'password' },
-];
+const STORAGE_KEY = 'vestra_user';
 
-export const useAuthStore = create<AuthState>((set) => ({
+function withMirror(user: User): User {
+  const roles = user.roles && user.roles.length ? user.roles : (['buyer'] as UserRole[]);
+  const activeRole = user.activeRole || roles[0];
+  return { ...user, roles, activeRole, role: activeRole };
+}
+
+function persist(user: User | null) {
+  if (user) localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
+  else localStorage.removeItem(STORAGE_KEY);
+}
+
+export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   isAuthenticated: false,
+  loading: false,
 
-  login: (email: string, password: string) => {
-    const found = demoUsers.find((u) => u.email === email && u.password === password);
-    if (found) {
-      const { password: _, ...user } = found;
-      set({ user, isAuthenticated: true });
-      localStorage.setItem('vestra_user', JSON.stringify(user));
-      return true;
+  login: (email, password) => {
+    // Kick off async login but return boolean immediately for legacy callers.
+    void get().loginAsync(email, password).catch(() => undefined);
+    return true;
+  },
+
+  loginAsync: async (email, password) => {
+    set({ loading: true });
+    try {
+      const res = await apiRequest<{ token: string; user: User }>('/api/auth/login', {
+        method: 'POST',
+        body: { email, password },
+        auth: false,
+      });
+      setToken(res.token);
+      const user = withMirror(res.user);
+      set({ user, isAuthenticated: true, loading: false });
+      persist(user);
+      return user;
+    } catch (e) {
+      set({ loading: false });
+      throw e;
     }
-    return false;
+  },
+
+  registerAsync: async (data) => {
+    set({ loading: true });
+    try {
+      const res = await apiRequest<{ token: string; user: User }>('/api/auth/register', {
+        method: 'POST',
+        body: data,
+        auth: false,
+      });
+      setToken(res.token);
+      const user = withMirror(res.user);
+      set({ user, isAuthenticated: true, loading: false });
+      persist(user);
+      return user;
+    } catch (e) {
+      set({ loading: false });
+      throw e;
+    }
   },
 
   logout: () => {
+    setToken(null);
+    persist(null);
     set({ user: null, isAuthenticated: false });
-    localStorage.removeItem('vestra_user');
+  },
+
+  activateRole: async (role, meta) => {
+    const res = await apiRequest<{ user: User }>('/api/roles/activate', {
+      method: 'POST',
+      body: { role, meta },
+    });
+    const user = withMirror(res.user);
+    set({ user });
+    persist(user);
+  },
+
+  switchRole: async (role) => {
+    const res = await apiRequest<{ user: User }>('/api/roles/switch', {
+      method: 'POST',
+      body: { role },
+    });
+    const user = withMirror(res.user);
+    set({ user });
+    persist(user);
+  },
+
+  removeRole: async (role) => {
+    if (role === 'buyer') return;
+    const res = await apiRequest<{ user: User }>(`/api/roles/${role}`, { method: 'DELETE' });
+    const user = withMirror(res.user);
+    set({ user });
+    persist(user);
+  },
+
+  updateUser: async (patch) => {
+    const res = await apiRequest<{ user: User }>('/api/users/me', {
+      method: 'PATCH',
+      body: patch,
+    });
+    const user = withMirror(res.user);
+    set({ user });
+    persist(user);
   },
 }));
 
-export const initAuth = () => {
-  const stored = localStorage.getItem('vestra_user');
+export const initAuth = async () => {
+  const token = getToken();
+  const stored = localStorage.getItem(STORAGE_KEY);
+
+  // Stale cached user without a matching token = signed out. Clear quietly.
+  if (!token) {
+    if (stored) localStorage.removeItem(STORAGE_KEY);
+    useAuthStore.setState({ user: null, isAuthenticated: false });
+    return;
+  }
+
+  // Optimistic hydrate so the UI has a user immediately.
   if (stored) {
     try {
-      const user = JSON.parse(stored) as User;
-      useAuthStore.setState({ user, isAuthenticated: true });
+      const cached = JSON.parse(stored) as User;
+      useAuthStore.setState({ user: withMirror(cached), isAuthenticated: true });
     } catch {
-      localStorage.removeItem('vestra_user');
+      localStorage.removeItem(STORAGE_KEY);
     }
   }
+
+  // Verify the token with the backend.
+  try {
+    const res = await apiRequest<{ user: User }>('/api/auth/me');
+    const user = withMirror(res.user);
+    useAuthStore.setState({ user, isAuthenticated: true });
+    persist(user);
+  } catch (e) {
+    if (e instanceof ApiError && e.status === 401) {
+      setToken(null);
+      persist(null);
+      useAuthStore.setState({ user: null, isAuthenticated: false });
+    }
+    // For network errors (status 0), keep optimistic hydration so the UI is usable offline.
+  }
 };
+
+export const useActiveRole = (): UserRole => useAuthStore((s) => s.user?.activeRole || 'buyer');

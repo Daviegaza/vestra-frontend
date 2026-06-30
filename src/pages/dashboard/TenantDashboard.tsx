@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Home, CreditCard, Wrench, Calendar, Receipt, FileText } from 'lucide-react';
+import { Home, CreditCard, Wrench, Calendar, Receipt, FileText, Clock } from 'lucide-react';
+import ExtensionRequestModal from '../../components/payment/ExtensionRequestModal';
 import { useLocation } from 'react-router-dom';
 
 import StatCard from '../../components/dashboard/StatCard';
@@ -19,6 +20,7 @@ export default function TenantDashboard() {
   const { receipts, maintenance, payRent, submitMaintenance, leases } = useRentalStore();
   const [showPay, setShowPay] = useState(false);
   const [showMaint, setShowMaint] = useState(false);
+  const [showExtension, setShowExtension] = useState(false);
 
   // Tenant-specific data (in real app, filtered by user ID)
   const myReceipts = receipts.filter((r) => r.tenantId === 'tnt-002');
@@ -85,6 +87,9 @@ export default function TenantDashboard() {
           <div className="p-6 bg-emerald-900/10 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-4 border border-emerald-900/30">
             <div><h2 className="font-semibold text-white">June Rent</h2><p className="text-sm text-gray-400">KES 45,000 &middot; Due Jul 1, 2026</p></div>
             <Button size="lg" onClick={() => setShowPay(true)}><CreditCard size={16} /> Pay Now via M-Pesa</Button>
+            <Button size="lg" variant="outline" onClick={() => setShowExtension(true)}>
+              <Clock size={16} /> Request more time
+            </Button>
           </div>
 
           {/* Recent Receipts */}
@@ -192,6 +197,15 @@ export default function TenantDashboard() {
       <Modal open={showPay} onClose={() => setShowPay(false)} title="Pay Rent via M-Pesa">
         <STKPushSimulator amount={45000} description="June 2026 Rent — 1BR Studio Kileleshwa" accountRef="TNT002-UNIT002" onSuccess={handlePayRent} onCancel={() => setShowPay(false)} />
       </Modal>
+
+      <ExtensionRequestModal
+        open={showExtension}
+        onClose={() => setShowExtension(false)}
+        kind="rent"
+        amount={45000}
+        approverName={myLease?.landlordName}
+        originalDue={new Date().toISOString()}
+      />
     </>
   );
 }

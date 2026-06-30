@@ -1,20 +1,12 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Building, ArrowRight, Sparkles } from 'lucide-react';
+import { Building, ArrowRight, Sparkles, Shield, Home, Users, Briefcase } from 'lucide-react';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import PasswordStrengthMeter from '../../components/ui/PasswordStrengthMeter';
 import { toast } from '../../store/toastStore';
 import { validateEmail, validateKenyanPhone, validateRequired, validatePassword } from '../../lib/validation';
-import type { UserRole } from '../../types';
 import { useAuthStore } from '../../store/authStore';
-
-const roles: { value: UserRole; label: string; desc: string }[] = [
-  { value: 'buyer', label: 'Regular User', desc: 'Browse, save, and buy property. No dashboard needed.' },
-  { value: 'seller', label: 'Seller', desc: 'List and sell your properties with a full dashboard.' },
-  { value: 'landlord', label: 'Landlord', desc: 'Manage units, tenants, rent collection & maintenance.' },
-  { value: 'agent', label: 'Agent', desc: 'Manage listings, leads, commissions & grow your business.' },
-];
 
 export default function Register() {
   const navigate = useNavigate();
@@ -22,7 +14,6 @@ export default function Register() {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState<UserRole>('buyer');
   const [errors, setErrors] = useState<Record<string, string | null>>({});
   const [loading, setLoading] = useState(false);
 
@@ -38,22 +29,15 @@ export default function Register() {
     if (Object.values(errs).some(Boolean)) return;
 
     setLoading(true);
-    const user = {
-      id: `user-${Date.now()}`,
-      email,
-      fullName: name,
-      phone,
-      role,
-      isVerified: true,
-      isKycVerified: false,
-      location: '',
-    };
-    useAuthStore.setState({ user, isAuthenticated: true });
-    localStorage.setItem('vestra_user', JSON.stringify(user));
-    toast.success('Karibu! Account created successfully.');
-    const target = role === 'buyer' ? '/market' : '/dashboard';
-    setTimeout(() => navigate(target), 500);
-    setLoading(false);
+    try {
+      await useAuthStore.getState().registerAsync({ email, password, fullName: name, phone });
+      toast.success('Karibu! Your account is ready.');
+      navigate('/dashboard');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Registration failed');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -65,10 +49,10 @@ export default function Register() {
           </div>
           Vestra
         </Link>
-        <h1 className="text-3xl font-black text-gray-900 dark:text-white">Create Your Account</h1>
+        <h1 className="text-3xl font-black text-gray-900 dark:text-white">Join Vestra</h1>
         <p className="text-gray-500 dark:text-gray-400 mt-2 flex items-center justify-center gap-1.5">
           <Sparkles size={14} className="text-emerald-500" />
-          Start your property journey in Kenya
+          One account. Add landlord, agent, tenant roles anytime.
         </p>
       </div>
 
@@ -79,18 +63,19 @@ export default function Register() {
           <Input label="Phone" type="tel" placeholder="+254 7XX XXX XXX" value={phone} onChange={(e) => setPhone(e.target.value)} error={errors.phone || undefined} required />
           <Input label="Password" type="password" placeholder="Min 8 characters with a number" value={password} onChange={(e) => setPassword(e.target.value)} error={errors.password || undefined} required />
           <PasswordStrengthMeter password={password} />
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">I am a...</label>
-            <select
-              value={role}
-              onChange={(e) => setRole(e.target.value as UserRole)}
-              className="w-full rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all"
-            >
-              {roles.map((r) => (
-                <option key={r.value} value={r.value}>{r.label} — {r.desc}</option>
-              ))}
-            </select>
+
+          <div className="rounded-xl border border-emerald-200/60 dark:border-emerald-900/40 bg-emerald-50/40 dark:bg-emerald-900/10 p-3">
+            <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+              <Shield size={12} /> What you unlock later
+            </p>
+            <div className="grid grid-cols-2 gap-2 text-xs text-gray-600 dark:text-gray-400">
+              <span className="flex items-center gap-1.5"><Home size={12} className="text-emerald-600" /> Landlord</span>
+              <span className="flex items-center gap-1.5"><Briefcase size={12} className="text-emerald-600" /> Agent</span>
+              <span className="flex items-center gap-1.5"><Users size={12} className="text-emerald-600" /> Tenant</span>
+              <span className="flex items-center gap-1.5"><Building size={12} className="text-emerald-600" /> Seller</span>
+            </div>
           </div>
+
           <Button type="submit" className="w-full" size="lg" loading={loading}>
             {loading ? 'Creating Account...' : 'Create Account'} {!loading && <ArrowRight size={16} />}
           </Button>

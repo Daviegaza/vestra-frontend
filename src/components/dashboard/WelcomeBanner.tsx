@@ -38,9 +38,14 @@ export default function WelcomeBanner() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <span className="px-3 py-1.5 bg-white/15 backdrop-blur-sm rounded-full text-sm font-medium border border-white/10">
-            {user?.role?.charAt(0).toUpperCase()}{user?.role?.slice(1)} Account
+          <span className="px-3 py-1.5 bg-white/15 backdrop-blur-sm rounded-full text-sm font-medium border border-white/10 capitalize">
+            {user?.activeRole || 'Member'} mode
           </span>
+          {(user?.roles?.length || 0) > 1 && (
+            <span className="px-2 py-1 bg-white/10 backdrop-blur-sm rounded-full text-[10px] font-bold uppercase tracking-wider border border-white/10">
+              +{(user!.roles.length) - 1} role{user!.roles.length - 1 === 1 ? '' : 's'}
+            </span>
+          )}
         </div>
       </div>
     </div>

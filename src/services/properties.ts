@@ -1,6 +1,5 @@
-import { properties as mockData } from '../data/properties';
-import { mockCall } from './api';
 import type { Property } from '../types';
+import { apiRequest } from './api';
 
 export interface PropertyFilters {
   q?: string;
@@ -22,98 +21,72 @@ export interface PaginatedResult<T> {
   pages: number;
 }
 
+function buildQuery(filters: PropertyFilters): string {
+  const params: string[] = [];
+  if (filters.q) params.push(`search=${encodeURIComponent(filters.q)}`);
+  if (filters.type) params.push(`propertyType=${filters.type}`);
+  if (filters.listing) params.push(`listingType=${filters.listing}`);
+  if (filters.county) params.push(`county=${encodeURIComponent(filters.county)}`);
+  if (filters.city) params.push(`city=${encodeURIComponent(filters.city)}`);
+  if (filters.minPrice) params.push(`minPrice=${filters.minPrice}`);
+  if (filters.maxPrice) params.push(`maxPrice=${filters.maxPrice}`);
+  const limit = (filters.perPage || 9) * (filters.page || 1) * 4;
+  params.push(`limit=${limit}`);
+  return params.length ? `?${params.join('&')}` : '';
+}
+
 export async function getProperties(filters: PropertyFilters = {}): Promise<PaginatedResult<Property>> {
-  const { q, type, listing, county, city, minPrice, maxPrice, minBed, page = 1, perPage = 9 } = filters;
-
-  let filtered = [...mockData];
-
-  if (q) {
-    const lq = q.toLowerCase();
-    filtered = filtered.filter(
-      (p) =>
-        p.title.toLowerCase().includes(lq) ||
-        p.city.toLowerCase().includes(lq) ||
-        p.county.toLowerCase().includes(lq) ||
-        p.description.toLowerCase().includes(lq),
-    );
-  }
-  if (type) filtered = filtered.filter((p) => p.propertyType === type);
-  if (listing) filtered = filtered.filter((p) => p.listingType === listing);
-  if (county) filtered = filtered.filter((p) => p.county === county);
-  if (city) filtered = filtered.filter((p) => p.city === city);
-  if (minPrice) filtered = filtered.filter((p) => p.price >= minPrice);
-  if (maxPrice) filtered = filtered.filter((p) => p.price <= maxPrice);
-  if (minBed) filtered = filtered.filter((p) => p.bedrooms >= minBed);
-
-  const total = filtered.length;
+  const { page = 1, perPage = 9, minBed } = filters;
+  const res = await apiRequest<{ properties: Property[] }>(`/api/properties${buildQuery(filters)}`, { auth: false });
+  let items = res.properties;
+  if (minBed) items = items.filter((p) => p.bedrooms >= minBed);
+  const total = items.length;
   const pages = Math.max(1, Math.ceil(total / perPage));
   const start = (page - 1) * perPage;
-
-  return mockCall({
-    items: filtered.slice(start, start + perPage),
-    total,
-    page,
-    pages,
-  });
+  return { items: items.slice(start, start + perPage), total, page, pages };
 }
 
 export async function getPropertyById(id: string): Promise<Property | undefined> {
-  return mockCall(mockData.find((p) => p.id === id));
+  try {
+    const res = await apiRequest<{ property: Property }>(`/api/properties/${id}`, { auth: false });
+    return res.property;
+  } catch {
+    return undefined;
+  }
 }
 
 export async function getFeaturedProperties(): Promise<Property[]> {
-  return mockCall(mockData.filter((p) => p.isFeatured));
+  const res = await apiRequest<{ properties: Property[] }>(`/api/properties/featured`, { auth: false });
+  return res.properties;
 }
 
 export async function getSimilarProperties(propertyId: string, limit = 3): Promise<Property[]> {
-  const prop = mockData.find((p) => p.id === propertyId);
-  if (!prop) return mockCall([]);
-  return mockCall(
-    mockData.filter((p) => p.id !== propertyId && (p.city === prop.city || p.county === prop.county)).slice(0, limit),
+  const target = await getPropertyById(propertyId);
+  if (!target) return [];
+  const res = await apiRequest<{ properties: Property[] }>(
+    `/api/properties?city=${encodeURIComponent(target.city)}&limit=${limit + 1}`,
+    { auth: false },
   );
+  return res.properties.filter((p) => p.id !== propertyId).slice(0, limit);
 }
 
 export async function getPropertiesByAgent(agentId: string): Promise<Property[]> {
-  return mockCall(mockData.filter((p) => p.agentId === agentId));
+  try {
+    const res = await apiRequest<{ listings: Property[] }>(`/api/agents/${agentId}`, { auth: false });
+    return res.listings || [];
+  } catch {
+    return [];
+  }
 }
 
 export async function createProperty(data: Partial<Property>): Promise<Property> {
-  const p: Property = {
-    id: `prop-${Date.now()}`,
-    title: data.title || 'Untitled',
-    description: data.description || '',
-    propertyType: data.propertyType || 'residential',
-    listingType: data.listingType || 'sale',
-    status: 'active',
-    price: data.price || 0,
-    currency: 'KES',
-    bedrooms: data.bedrooms || 0,
-    bathrooms: data.bathrooms || 0,
-    sizeSqft: data.sizeSqft || 0,
-    yearBuilt: data.yearBuilt || 2024,
-    address: data.address || '',
-    city: data.city || '',
-    county: data.county || '',
-    country: 'Kenya',
-    lat: data.lat || -1.2921,
-    lng: data.lng || 36.8219,
-    amenities: data.amenities || [],
-    images: data.images || ['https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800'],
-    trustScore: 80,
-    isVerified: false,
-    isFeatured: false,
-    views: 0,
-    inquiries: 0,
-    ownerId: data.ownerId || '',
-    agentId: data.agentId,
-    createdAt: new Date().toISOString(),
-  };
-  mockData.unshift(p);
-  return mockCall(p);
+  const res = await apiRequest<{ property: Property }>(`/api/properties`, {
+    method: 'POST',
+    body: data,
+  });
+  return res.property;
 }
 
 export async function deleteProperty(id: string): Promise<void> {
-  const idx = mockData.findIndex((p) => p.id === id);
-  if (idx >= 0) mockData.splice(idx, 1);
-  return mockCall(undefined);
+  await apiRequest<{ ok: boolean }>(`/api/properties/${id}`, { method: 'DELETE' });
 }

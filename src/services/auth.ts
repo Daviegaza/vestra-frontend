@@ -15,12 +15,17 @@ export async function registerUser(data: {
   password: string;
   role: string;
 }): Promise<User> {
+  const initialRole = (data.role || 'buyer') as User['activeRole'];
+  const baseRoles: User['roles'] = initialRole === 'buyer' ? ['buyer'] : ['buyer', initialRole];
   const user: User = {
     id: `user-${Date.now()}`,
     email: data.email,
     fullName: data.fullName,
     phone: data.phone,
-    role: data.role as User['role'],
+    roles: baseRoles,
+    activeRole: initialRole,
+    role: initialRole,
+    roleProfiles: baseRoles.map((r) => ({ role: r, status: 'active', activatedAt: new Date().toISOString() })),
     isVerified: true,
     isKycVerified: false,
     location: '',

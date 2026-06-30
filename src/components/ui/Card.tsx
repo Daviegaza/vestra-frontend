@@ -6,6 +6,7 @@ interface CardProps {
   hover?: boolean;
   glass?: boolean;
   padding?: 'none' | 'sm' | 'md' | 'lg';
+  onClick?: () => void;
 }
 
 const paddingMap = { none: '', sm: 'p-3', md: 'p-5', lg: 'p-8' };
@@ -16,9 +17,14 @@ export default function Card({
   hover = false,
   glass = false,
   padding = 'md',
+  onClick,
 }: CardProps) {
   return (
     <div
+      onClick={onClick}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={onClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); } } : undefined}
       className={`rounded-2xl ${paddingMap[padding]} ${
         glass
           ? 'glass-card'
@@ -27,7 +33,7 @@ export default function Card({
         hover
           ? 'transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-emerald-200 dark:hover:border-emerald-800'
           : ''
-      } ${className}`}
+      } ${onClick ? 'cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500/30' : ''} ${className}`}
     >
       {children}
     </div>

@@ -1,12 +1,13 @@
-import { Suspense } from 'react';
+import { Suspense, lazy, useEffect, useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import Navbar from './Navbar';
 import Footer from './Footer';
-import AIAssistant from '../ai/AIAssistant';
 import ToastContainer from '../ui/ToastContainer';
-import PWAInstallPrompt from './PWAInstallPrompt';
 import { Spinner } from '../ui/Card';
-import CommandPalette from '../ui/CommandPalette';
+
+const AIAssistant = lazy(() => import('../ai/AIAssistant'));
+const PWAInstallPrompt = lazy(() => import('./PWAInstallPrompt'));
+const CommandPalette = lazy(() => import('../ui/CommandPalette'));
 
 function PageLoader() {
   return (
@@ -20,6 +21,17 @@ function PageLoader() {
 }
 
 export default function PublicLayout() {
+  const [deferredReady, setDeferredReady] = useState(false);
+
+  useEffect(() => {
+    const idle = (window as Window & { requestIdleCallback?: (cb: () => void) => number }).requestIdleCallback;
+    const handle = idle ? idle(() => setDeferredReady(true)) : window.setTimeout(() => setDeferredReady(true), 800);
+    return () => {
+      const cancel = (window as Window & { cancelIdleCallback?: (h: number) => void }).cancelIdleCallback;
+      if (cancel) cancel(handle as number); else clearTimeout(handle as number);
+    };
+  }, []);
+
   return (
     <div className="min-h-screen bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 transition-colors duration-300">
       <Navbar />
@@ -29,10 +41,14 @@ export default function PublicLayout() {
         </Suspense>
       </main>
       <Footer />
-      <AIAssistant />
       <ToastContainer />
-      <PWAInstallPrompt />
-      <CommandPalette />
+      {deferredReady && (
+        <Suspense fallback={null}>
+          <AIAssistant />
+          <PWAInstallPrompt />
+          <CommandPalette />
+        </Suspense>
+      )}
     </div>
   );
 }

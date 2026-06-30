@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { useState } from 'react';
 
 import BuildingUnitsView from '../../components/property/BuildingUnitsView';
+import LandlordInvitesPanel from '../../components/role/LandlordInvitesPanel';
 import StatCard from '../../components/dashboard/StatCard';
 import Card, { Badge } from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
@@ -57,6 +58,8 @@ export default function LandlordDashboard() {
             <StatCard title="Maintenance" value={pendingMaintenance} icon={Wrench} color="red" />
             <StatCard title="Monthly Income" value={formatCurrency(monthlyIncome)} icon={CreditCard} color="purple" />
           </div>
+
+          <LandlordInvitesPanel />
 
           {/* Quick Stats */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

@@ -5,12 +5,14 @@ import {
   LayoutDashboard, Home, Users, UserCheck,
   Wrench, CreditCard, Star, TrendingUp, MessageSquare,
   Shield, Settings, LogOut, Building, PlusCircle, List,
-  Receipt, Crown, ChevronLeft, ChevronRight,
+  Receipt, Crown, ChevronLeft, ChevronRight, Layers, Search, Heart, Plus,
+  PiggyBank, Wallet, BarChart3,
 } from 'lucide-react';
 import type { ComponentType } from 'react';
 import { useState, useEffect } from 'react';
 import Avatar from '../ui/Avatar';
 import Tooltip from '../ui/Tooltip';
+import { ROLE_INDEX, roleAccentClasses } from '../../lib/roleCatalog';
 
 interface NavItem {
   to: string;
@@ -19,9 +21,24 @@ interface NavItem {
   badge?: string;
 }
 
-type DashboardRole = Exclude<UserRole, 'buyer'>;
-
-const roleNavs: Record<DashboardRole, { primary: NavItem[]; secondary: NavItem[] }> = {
+const roleNavs: Record<UserRole, { primary: NavItem[]; secondary: NavItem[] }> = {
+  buyer: {
+    primary: [
+      { to: '/dashboard', label: 'Home', icon: LayoutDashboard },
+      { to: '/market', label: 'Browse Market', icon: Search },
+      { to: '/dashboard/chama', label: 'Investments (Chama)', icon: PiggyBank },
+      { to: '/dashboard/escrow', label: 'Escrow', icon: Wallet },
+      { to: '/dashboard/plans', label: 'Plans', icon: Crown },
+      { to: '/dashboard/roles', label: 'My Roles', icon: Layers },
+      { to: '/verify', label: 'Verify Property', icon: Shield },
+      { to: '/insights', label: 'Market Insights', icon: BarChart3 },
+    ],
+    secondary: [
+      { to: '/messages', label: 'Messages', icon: MessageSquare },
+      { to: '/settings', label: 'Saved', icon: Heart },
+      { to: '/settings', label: 'Settings', icon: Settings },
+    ],
+  },
   seller: {
     primary: [
       { to: '/dashboard/seller', label: 'Overview', icon: LayoutDashboard },
@@ -31,6 +48,10 @@ const roleNavs: Record<DashboardRole, { primary: NavItem[]; secondary: NavItem[]
       { to: '/market', label: 'Browse Market', icon: Building },
     ],
     secondary: [
+      { to: '/dashboard/roles', label: 'My Roles', icon: Layers },
+      { to: '/dashboard/plans', label: 'Plans', icon: Crown },
+      { to: '/dashboard/chama', label: 'Investments', icon: PiggyBank },
+      { to: '/dashboard/escrow', label: 'Escrow', icon: Wallet },
       { to: '/messages', label: 'Messages', icon: MessageSquare },
       { to: '/verify', label: 'Verify Property', icon: Shield },
       { to: '/settings', label: 'Settings', icon: Settings },
@@ -42,8 +63,13 @@ const roleNavs: Record<DashboardRole, { primary: NavItem[]; secondary: NavItem[]
       { to: '/dashboard/landlord/units', label: 'My Units', icon: Home },
       { to: '/dashboard/landlord/tenants', label: 'Tenants', icon: Users },
       { to: '/dashboard/landlord/maintenance', label: 'Maintenance', icon: Wrench },
+      { to: '/dashboard/analytics', label: 'Analytics', icon: TrendingUp },
     ],
     secondary: [
+      { to: '/dashboard/roles', label: 'My Roles', icon: Layers },
+      { to: '/dashboard/plans', label: 'Plans', icon: Crown },
+      { to: '/dashboard/chama', label: 'Investments', icon: PiggyBank },
+      { to: '/dashboard/escrow', label: 'Escrow', icon: Wallet },
       { to: '/messages', label: 'Messages', icon: MessageSquare },
       { to: '/settings', label: 'Settings', icon: Settings },
     ],
@@ -57,6 +83,10 @@ const roleNavs: Record<DashboardRole, { primary: NavItem[]; secondary: NavItem[]
       { to: '/market', label: 'Find a Home', icon: Building },
     ],
     secondary: [
+      { to: '/dashboard/roles', label: 'My Roles', icon: Layers },
+      { to: '/dashboard/plans', label: 'Plans', icon: Crown },
+      { to: '/dashboard/chama', label: 'Investments', icon: PiggyBank },
+      { to: '/dashboard/escrow', label: 'Escrow', icon: Wallet },
       { to: '/messages', label: 'Messages', icon: MessageSquare },
       { to: '/settings', label: 'Settings', icon: Settings },
     ],
@@ -71,6 +101,10 @@ const roleNavs: Record<DashboardRole, { primary: NavItem[]; secondary: NavItem[]
     ],
     secondary: [
       { to: '/dashboard/agent/subscription', label: 'Subscription', icon: Crown },
+      { to: '/dashboard/roles', label: 'My Roles', icon: Layers },
+      { to: '/dashboard/plans', label: 'Plans', icon: Crown },
+      { to: '/dashboard/chama', label: 'Investments', icon: PiggyBank },
+      { to: '/dashboard/escrow', label: 'Escrow', icon: Wallet },
       { to: '/messages', label: 'Messages', icon: MessageSquare },
       { to: '/market', label: 'Browse Market', icon: Building },
       { to: '/settings', label: 'Settings', icon: Settings },
@@ -85,6 +119,10 @@ const roleNavs: Record<DashboardRole, { primary: NavItem[]; secondary: NavItem[]
       { to: '/dashboard/admin/fraud', label: 'Fraud Reports', icon: Star },
     ],
     secondary: [
+      { to: '/dashboard/roles', label: 'My Roles', icon: Layers },
+      { to: '/dashboard/plans', label: 'Plans', icon: Crown },
+      { to: '/dashboard/chama', label: 'Investments', icon: PiggyBank },
+      { to: '/dashboard/escrow', label: 'Escrow', icon: Wallet },
       { to: '/messages', label: 'Messages', icon: MessageSquare },
       { to: '/settings', label: 'Settings', icon: Settings },
     ],
@@ -92,23 +130,29 @@ const roleNavs: Record<DashboardRole, { primary: NavItem[]; secondary: NavItem[]
 };
 
 export default function Sidebar() {
-  const { user, logout } = useAuthStore();
+  const { user, logout, switchRole } = useAuthStore();
   const location = useLocation();
   const navigate = useNavigate();
-  const role = (user?.role || 'seller') as DashboardRole;
-  const nav = roleNavs[role] || roleNavs.seller;
+  const role: UserRole = user?.activeRole || 'buyer';
+  const nav = roleNavs[role] || roleNavs.buyer;
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem('vestra_sidebar_collapsed') === 'true');
+  const [roleMenuOpen, setRoleMenuOpen] = useState(false);
 
-  useEffect(() => {
-    localStorage.setItem('vestra_sidebar_collapsed', String(collapsed));
-  }, [collapsed]);
+  useEffect(() => { localStorage.setItem('vestra_sidebar_collapsed', String(collapsed)); }, [collapsed]);
 
   const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + '/');
 
-  const handleLogout = () => {
-    logout();
-    navigate('/');
+  const handleLogout = () => { logout(); navigate('/'); };
+
+  const handleSwitch = (newRole: UserRole) => {
+    switchRole(newRole);
+    setRoleMenuOpen(false);
+    const target = ROLE_INDEX[newRole]?.dashboardPath || '/dashboard';
+    navigate(target);
   };
+
+  const accent = ROLE_INDEX[role] ? roleAccentClasses(ROLE_INDEX[role]!.accent) : roleAccentClasses('emerald');
+  const otherRoles = (user?.roles || []).filter((r) => r !== role);
 
   return (
     <aside
@@ -116,12 +160,52 @@ export default function Sidebar() {
         collapsed ? 'w-[68px]' : 'w-60 lg:w-64'
       }`}
     >
-      {/* Role badge */}
-      <div className={`px-3 pt-4 pb-2 ${collapsed ? 'flex justify-center' : ''}`}>
-        <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 rounded-xl text-xs font-semibold uppercase tracking-wider ${collapsed ? 'px-2' : ''}`}>
+      {/* Role switcher chip */}
+      <div className={`relative px-3 pt-4 pb-2 ${collapsed ? 'flex justify-center' : ''}`}>
+        <button
+          onClick={() => setRoleMenuOpen(!roleMenuOpen)}
+          className={`inline-flex items-center gap-1.5 px-3 py-1.5 ${accent.bg} ${accent.text} rounded-xl text-xs font-semibold uppercase tracking-wider hover:ring-2 hover:ring-offset-1 dark:hover:ring-offset-gray-900 ${accent.ring} transition-all ${collapsed ? 'px-2' : ''}`}
+          aria-label="Switch role"
+        >
           <Shield size={collapsed ? 14 : 12} />
-          {!collapsed && <span>{user?.role}</span>}
-        </span>
+          {!collapsed && <span className="truncate max-w-[100px]">{role}</span>}
+          {!collapsed && (user?.roles.length || 0) > 1 && <ChevronRight size={12} className="opacity-50" />}
+        </button>
+
+        {roleMenuOpen && !collapsed && (
+          <div className="absolute left-3 right-3 top-full mt-1 z-40 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 py-1.5 overflow-hidden">
+            <p className="px-3 py-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Switch role</p>
+            {otherRoles.map((r) => {
+              const entry = ROLE_INDEX[r];
+              const Icon = entry?.icon || Shield;
+              const a = entry ? roleAccentClasses(entry.accent) : accent;
+              return (
+                <button
+                  key={r}
+                  onClick={() => handleSwitch(r)}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 text-left"
+                >
+                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${a.bg}`}>
+                    <Icon size={14} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 dark:text-white capitalize">{entry?.label || r}</p>
+                    <p className="text-[10px] text-gray-500 truncate">{entry?.tagline || ''}</p>
+                  </div>
+                </button>
+              );
+            })}
+            <div className="border-t border-gray-100 dark:border-gray-700 mt-1">
+              <Link
+                to="/dashboard/roles"
+                onClick={() => setRoleMenuOpen(false)}
+                className="flex items-center gap-2 px-3 py-2 text-sm text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
+              >
+                <Plus size={14} /> Manage roles
+              </Link>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Nav Links */}
@@ -130,12 +214,12 @@ export default function Sidebar() {
           {nav.primary.map((item) => {
             const active = isActive(item.to);
             return collapsed ? (
-              <Tooltip key={item.to} content={item.label} position="right">
+              <Tooltip key={item.to + item.label} content={item.label} position="right">
                 <Link
                   to={item.to}
                   className={`flex items-center justify-center w-11 h-11 mx-auto rounded-xl transition-all duration-200 ${
                     active
-                      ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 shadow-sm'
+                      ? `${accent.bg} ${accent.text} shadow-sm`
                       : 'text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-300'
                   }`}
                 >
@@ -144,17 +228,15 @@ export default function Sidebar() {
               </Tooltip>
             ) : (
               <Link
-                key={item.to}
+                key={item.to + item.label}
                 to={item.to}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
                   active
-                    ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 shadow-sm'
+                    ? `${accent.bg} ${accent.text} shadow-sm`
                     : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'
                 }`}
               >
-                <span className="shrink-0">
-                  <item.icon size={18} />
-                </span>
+                <span className="shrink-0"><item.icon size={18} /></span>
                 <span className="truncate">{item.label}</span>
                 {item.badge && (
                   <span className="ml-auto text-[10px] px-1.5 py-0.5 bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 rounded-full font-semibold">
@@ -168,23 +250,19 @@ export default function Sidebar() {
 
         {!collapsed && (
           <div>
-            <p className="px-3 text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-1.5">
-              More
-            </p>
+            <p className="px-3 text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-1.5">More</p>
             <div className="space-y-0.5">
               {nav.secondary.map((item) => (
                 <Link
-                  key={item.to}
+                  key={item.to + item.label}
                   to={item.to}
                   className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
                     isActive(item.to)
-                      ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 shadow-sm'
+                      ? `${accent.bg} ${accent.text} shadow-sm`
                       : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'
                   }`}
                 >
-                  <span className="shrink-0">
-                  <item.icon size={18} />
-                </span>
+                  <span className="shrink-0"><item.icon size={18} /></span>
                   <span className="truncate">{item.label}</span>
                 </Link>
               ))}

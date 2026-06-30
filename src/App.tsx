@@ -30,7 +30,10 @@ const LandlordDashboard = lazy(() => import('./pages/dashboard/LandlordDashboard
 const TenantDashboard = lazy(() => import('./pages/dashboard/TenantDashboard'));
 const AgentDashboard = lazy(() => import('./pages/dashboard/AgentDashboard'));
 const AdminDashboard = lazy(() => import('./pages/dashboard/AdminDashboard'));
+const AdminOverview = lazy(() => import('./pages/dashboard/AdminOverview'));
+const AdminSubPage = lazy(() => import('./pages/dashboard/AdminSubPage'));
 const ChamaDashboard = lazy(() => import('./pages/dashboard/ChamaDashboard'));
+const Roles = lazy(() => import('./pages/dashboard/Roles'));
 const Subscription = lazy(() => import('./pages/dashboard/Subscription'));
 const EscrowManagement = lazy(() => import('./pages/dashboard/EscrowManagement'));
 const Analytics = lazy(() => import('./pages/dashboard/Analytics'));
@@ -56,7 +59,7 @@ function PageLoader() {
 
 export default function App() {
   useEffect(() => {
-    initAuth();
+    void initAuth();
     initTheme();
   }, []);
 
@@ -97,6 +100,7 @@ export default function App() {
           {/* Dashboard Routes (Sidebar + Topbar layout) */}
           <Route element={<AuthGuard><DashboardLayout /></AuthGuard>}>
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/dashboard/roles" element={<Roles />} />
             <Route path="/dashboard/seller" element={<SellerDashboard />} />
             <Route path="/dashboard/seller/listings" element={<SellerDashboard />} />
             <Route path="/dashboard/seller/add" element={<SellerDashboard />} />
@@ -115,15 +119,21 @@ export default function App() {
             <Route path="/dashboard/agent/commissions" element={<AgentDashboard />} />
             <Route path="/dashboard/agent/add" element={<AgentDashboard />} />
             <Route path="/dashboard/agent/subscription" element={<Subscription />} />
+            <Route path="/dashboard/plans" element={<Subscription />} />
             <Route path="/dashboard/escrow" element={<EscrowManagement />} />
             <Route path="/dashboard/analytics" element={<Analytics />} />
             <Route path="/dashboard/maintenance" element={<MaintenanceHub />} />
             <Route path="/dashboard/chama" element={<ChamaDashboard />} />
-            <Route path="/dashboard/admin" element={<AdminDashboard />} />
+            <Route path="/dashboard/admin" element={<AdminOverview />} />
             <Route path="/dashboard/admin/users" element={<AdminDashboard />} />
             <Route path="/dashboard/admin/properties" element={<AdminDashboard />} />
             <Route path="/dashboard/admin/verifications" element={<AdminDashboard />} />
             <Route path="/dashboard/admin/fraud" element={<AdminDashboard />} />
+            <Route path="/dashboard/admin/subscriptions" element={<AdminSubPage />} />
+            <Route path="/dashboard/admin/extensions" element={<AdminSubPage />} />
+            <Route path="/dashboard/admin/invites" element={<AdminSubPage />} />
+            <Route path="/dashboard/admin/rent" element={<AdminSubPage />} />
+            <Route path="/dashboard/admin/leases" element={<AdminSubPage />} />
             <Route path="/messages" element={<Messages />} />
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/settings" element={<Settings />} />

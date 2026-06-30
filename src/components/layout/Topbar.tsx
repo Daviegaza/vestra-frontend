@@ -5,26 +5,42 @@ import { useRealtimeStore } from '../../store/realtimeStore';
 import {
   Menu, Bell, Sun, Moon, Globe, Search, Settings,
   LogOut, User, MessageSquare, LayoutDashboard, Building,
-  Heart, DollarSign, ChevronDown, Sparkles,
+  Heart, DollarSign, ChevronDown, Sparkles, Layers, Plus,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Breadcrumb from '../ui/Breadcrumb';
 import CommandPalette from '../ui/CommandPalette';
 import NotificationCenter from '../ui/NotificationCenter';
 import Avatar from '../ui/Avatar';
 import Dropdown from '../ui/Dropdown';
 import type { DropdownItem } from '../ui/Dropdown';
+import { ROLE_INDEX, roleAccentClasses } from '../../lib/roleCatalog';
+import type { UserRole } from '../../types';
 
 interface TopbarProps {
   onMenuClick?: () => void;
 }
 
 export default function Topbar({ onMenuClick }: TopbarProps) {
-  const { isAuthenticated, user, logout } = useAuthStore();
+  const { isAuthenticated, user, logout, switchRole } = useAuthStore();
   const { theme, toggle: toggleTheme } = useThemeStore();
   const { unreadCount } = useRealtimeStore();
+  const navigate = useNavigate();
   const [lang, setLang] = useState<'en' | 'sw'>(() => (localStorage.getItem('vestra_lang') as 'en' | 'sw') || 'en');
   const [notifOpen, setNotifOpen] = useState(false);
+  const [roleMenuOpen, setRoleMenuOpen] = useState(false);
+
+  const activeRole: UserRole = user?.activeRole || 'buyer';
+  const roleEntry = ROLE_INDEX[activeRole];
+  const roleAccent = roleEntry ? roleAccentClasses(roleEntry.accent) : roleAccentClasses('emerald');
+  const otherRoles = (user?.roles || []).filter((r) => r !== activeRole);
+
+  const handleRoleSwitch = (r: UserRole) => {
+    switchRole(r);
+    setRoleMenuOpen(false);
+    navigate(ROLE_INDEX[r]?.dashboardPath || '/dashboard');
+  };
 
   useEffect(() => { localStorage.setItem('vestra_lang', lang); }, [lang]);
 
@@ -107,6 +123,58 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
 
           {isAuthenticated ? (
             <>
+              {/* Role switcher chip */}
+              <div className="relative hidden sm:block">
+                <button
+                  onClick={() => setRoleMenuOpen(!roleMenuOpen)}
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold capitalize ${roleAccent.bg} ${roleAccent.text} hover:ring-2 ${roleAccent.ring} transition-all`}
+                  aria-label="Switch role"
+                >
+                  <Layers size={12} />
+                  <span className="hidden md:inline">{roleEntry?.label || activeRole}</span>
+                  <ChevronDown size={12} className="opacity-60" />
+                </button>
+                {roleMenuOpen && (
+                  <>
+                    <div className="fixed inset-0 z-30" onClick={() => setRoleMenuOpen(false)} />
+                    <div className="absolute right-0 top-full mt-1 z-40 w-60 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 py-1.5">
+                      <p className="px-3 py-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Switch role</p>
+                      {otherRoles.length === 0 && (
+                        <p className="px-3 py-2 text-xs text-gray-500">You only have one role. Add another below.</p>
+                      )}
+                      {otherRoles.map((r) => {
+                        const entry = ROLE_INDEX[r];
+                        const Icon = entry?.icon;
+                        const a = entry ? roleAccentClasses(entry.accent) : roleAccent;
+                        return (
+                          <button
+                            key={r}
+                            onClick={() => handleRoleSwitch(r)}
+                            className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 text-left"
+                          >
+                            <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${a.bg}`}>
+                              {Icon && <Icon size={14} />}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-gray-900 dark:text-white capitalize">{entry?.label || r}</p>
+                              <p className="text-[10px] text-gray-500 truncate">{entry?.tagline || ''}</p>
+                            </div>
+                          </button>
+                        );
+                      })}
+                      <div className="border-t border-gray-100 dark:border-gray-700 mt-1">
+                        <button
+                          onClick={() => { setRoleMenuOpen(false); navigate('/dashboard/roles'); }}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
+                        >
+                          <Plus size={14} /> Manage roles
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+
               {/* Notifications */}
               <button
                 onClick={() => setNotifOpen(!notifOpen)}

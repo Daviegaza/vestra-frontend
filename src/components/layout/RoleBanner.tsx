@@ -19,7 +19,8 @@ const roleSubtitles: Record<string, string> = {
 
 export default function RoleBanner() {
   const { user } = useAuthStore();
-  const theme = getRoleTheme(user?.role);
+  const activeRole = user?.activeRole || 'buyer';
+  const theme = getRoleTheme(activeRole);
   const firstName = user?.fullName?.split(' ')[0] || 'there';
 
   return (
@@ -38,11 +39,11 @@ export default function RoleBanner() {
             </h1>
           </div>
           <p className="text-sm text-gray-300 max-w-md">
-            {roleSubtitles[user?.role || 'buyer']}
+            {roleSubtitles[activeRole]}
           </p>
         </div>
         <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold capitalize border ${theme.badge}`}>
-          {user?.role}
+          {activeRole}
         </span>
       </div>
     </div>

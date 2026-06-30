@@ -9,7 +9,7 @@ import { toast } from '../../store/toastStore';
 import { validateEmail, validateRequired } from '../../lib/validation';
 
 export default function Login() {
-  const { login } = useAuthStore();
+  const { loginAsync } = useAuthStore();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -18,20 +18,19 @@ export default function Login() {
   const [error, setError] = useState('');
   const [otpSent, setOtpSent] = useState(false);
 
-  const handleEmailLogin = (e: React.FormEvent) => {
+  const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     const emailErr = validateEmail(email);
     const passErr = validateRequired(password, 'Password');
     if (emailErr || passErr) { setError(emailErr || passErr || ''); return; }
 
-    const success = login(email, password);
-    if (success) {
+    try {
+      await loginAsync(email, password);
       toast.success('Welcome back!');
-      const target = useAuthStore.getState().user?.role === 'buyer' ? '/market' : '/dashboard';
-      navigate(target);
-    } else {
-      setError('Invalid email or password. Try one of the demo accounts.');
+      navigate('/dashboard');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Sign-in failed');
     }
   };
 

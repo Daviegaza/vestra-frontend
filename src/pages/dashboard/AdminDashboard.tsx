@@ -10,14 +10,14 @@ import { properties } from '../../data/properties';
 import type { User as UserType } from '../../types';
 
 const initialUsers: UserType[] = [
-  { id: 'user-001', email: 'buyer@vestra.com', fullName: 'John Doe', phone: '+254711111111', role: 'buyer', isVerified: true, isKycVerified: true, location: 'Nairobi' },
-  { id: 'user-002', email: 'seller@vestra.com', fullName: 'Jane Muthoni', phone: '+254722222222', role: 'seller', isVerified: true, isKycVerified: true, location: 'Karen' },
-  { id: 'user-003', email: 'landlord@vestra.com', fullName: 'Sammy Ndungu', phone: '+254733333333', role: 'landlord', isVerified: true, isKycVerified: true, location: 'Kilimani' },
-  { id: 'user-004', email: 'tenant@vestra.com', fullName: 'Mary Wanjiru', phone: '+254744444444', role: 'tenant', isVerified: true, isKycVerified: false, location: 'Westlands' },
-  { id: 'user-005', email: 'agent@vestra.com', fullName: 'Wanjiku Mwangi', phone: '+254755555555', role: 'agent', isVerified: true, isKycVerified: true, location: 'Nairobi' },
-  { id: 'user-006', email: 'admin@vestra.com', fullName: 'Admin User', phone: '+254766666666', role: 'admin', isVerified: true, isKycVerified: true, location: 'Nairobi' },
-  { id: 'user-007', email: 'unverified@test.com', fullName: 'Peter Otieno', phone: '+254777777777', role: 'buyer', isVerified: false, isKycVerified: false, location: 'Kisumu' },
-  { id: 'user-008', email: 'flagged@test.com', fullName: 'Alice Kilonzo', phone: '+254788888888', role: 'seller', isVerified: false, isKycVerified: false, location: 'Nairobi' },
+  { id: 'user-001', email: 'buyer@vestra.com', fullName: 'John Doe', phone: '+254711111111', roles: ['buyer'], activeRole: 'buyer', role: 'buyer', isVerified: true, isKycVerified: true, location: 'Nairobi' },
+  { id: 'user-002', email: 'seller@vestra.com', fullName: 'Jane Muthoni', phone: '+254722222222', roles: ['buyer', 'seller'], activeRole: 'seller', role: 'seller', isVerified: true, isKycVerified: true, location: 'Karen' },
+  { id: 'user-003', email: 'landlord@vestra.com', fullName: 'Sammy Ndungu', phone: '+254733333333', roles: ['buyer', 'landlord'], activeRole: 'landlord', role: 'landlord', isVerified: true, isKycVerified: true, location: 'Kilimani' },
+  { id: 'user-004', email: 'tenant@vestra.com', fullName: 'Mary Wanjiru', phone: '+254744444444', roles: ['buyer', 'tenant'], activeRole: 'tenant', role: 'tenant', isVerified: true, isKycVerified: false, location: 'Westlands' },
+  { id: 'user-005', email: 'agent@vestra.com', fullName: 'Wanjiku Mwangi', phone: '+254755555555', roles: ['buyer', 'agent'], activeRole: 'agent', role: 'agent', isVerified: true, isKycVerified: true, location: 'Nairobi' },
+  { id: 'user-006', email: 'admin@vestra.com', fullName: 'Admin User', phone: '+254766666666', roles: ['buyer', 'admin'], activeRole: 'admin', role: 'admin', isVerified: true, isKycVerified: true, location: 'Nairobi' },
+  { id: 'user-007', email: 'unverified@test.com', fullName: 'Peter Otieno', phone: '+254777777777', roles: ['buyer'], activeRole: 'buyer', role: 'buyer', isVerified: false, isKycVerified: false, location: 'Kisumu' },
+  { id: 'user-008', email: 'flagged@test.com', fullName: 'Alice Kilonzo', phone: '+254788888888', roles: ['buyer', 'seller'], activeRole: 'seller', role: 'seller', isVerified: false, isKycVerified: false, location: 'Nairobi' },
 ];
 
 const roleColors: Record<string, string> = {
@@ -52,7 +52,7 @@ export default function AdminDashboard() {
 
   const filteredUsers = allUsers.filter((u) => {
     const q = userSearch.toLowerCase();
-    return !q || u.fullName.toLowerCase().includes(q) || u.email.toLowerCase().includes(q) || u.role.includes(q);
+    return !q || u.fullName.toLowerCase().includes(q) || u.email.toLowerCase().includes(q) || u.activeRole.includes(q);
   });
 
   const handleVerifyUser = (id: string) => {
@@ -212,7 +212,7 @@ export default function AdminDashboard() {
                           <p className="text-xs text-gray-500">{u.email}</p>
                         </td>
                         <td className="px-4 py-3">
-                          <Badge variant={(roleColors[u.role] as 'info' | 'success' | 'warning' | 'danger') || 'default'}>{u.role}</Badge>
+                          <Badge variant={(roleColors[u.activeRole] as 'info' | 'success' | 'warning' | 'danger') || 'default'}>{u.activeRole}</Badge>
                         </td>
                         <td className="px-4 py-3">
                           {u.isVerified ? (

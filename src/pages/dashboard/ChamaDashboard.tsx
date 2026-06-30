@@ -1,185 +1,227 @@
-import { useState } from 'react';
-import { Users, TrendingUp, CreditCard, Vote, PlusCircle, CheckCircle, UserPlus, Calendar } from 'lucide-react';
-
-import StatCard from '../../components/dashboard/StatCard';
+import { useEffect, useState } from 'react';
+import {
+  PiggyBank, Users, Target, ArrowRight, Plus, Loader2, Sparkles,
+  CheckCircle2, Receipt, Crown,
+} from 'lucide-react';
 import Card, { Badge } from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
+import Modal from '../../components/ui/Modal';
+import PaymentMethodPicker from '../../components/payment/PaymentMethodPicker';
+import { useAuthStore } from '../../store/authStore';
 import { toast } from '../../store/toastStore';
+import {
+  getMyChamas, createChama, contributeToChama,
+  type Chama,
+} from '../../services/chama';
+import type { PaymentMethod } from '../../lib/paymentMethods';
 
-interface ChamaMember {
-  id: string; name: string; contribution: number; share: number; joinedAt: string; avatar: string;
+function fmtKES(v: number | string) {
+  const n = typeof v === 'string' ? parseFloat(v) : v;
+  return `KES ${Math.round(n).toLocaleString()}`;
 }
-
-interface ChamaProposal {
-  id: string; title: string; description: string;
-  votes: { yes: number; no: number; abstain: number };
-  status: 'active' | 'passed' | 'rejected'; deadline: string;
-}
-
-const initialMembers: ChamaMember[] = [
-  { id: 'cm-1', name: 'John Doe', contribution: 500000, share: 16.7, joinedAt: '2026-01-15', avatar: '' },
-  { id: 'cm-2', name: 'Mary Wanjiku', contribution: 500000, share: 16.7, joinedAt: '2026-01-15', avatar: '' },
-  { id: 'cm-3', name: 'Peter Kamau', contribution: 500000, share: 16.7, joinedAt: '2026-02-01', avatar: '' },
-  { id: 'cm-4', name: 'Jane Muthoni', contribution: 500000, share: 16.7, joinedAt: '2026-02-01', avatar: '' },
-  { id: 'cm-5', name: 'David Ochieng', contribution: 500000, share: 16.7, joinedAt: '2026-03-01', avatar: '' },
-  { id: 'cm-6', name: 'Sarah Wambui', contribution: 500000, share: 16.7, joinedAt: '2026-03-15', avatar: '' },
-];
 
 export default function ChamaDashboard() {
-  const [showInvite, setShowInvite] = useState(false);
-  const [showProposal, setShowProposal] = useState(false);
-  const [proposals, setProposals] = useState<ChamaProposal[]>([
-    { id: 'prp-1', title: 'Invest in Diani Beachfront Plot', description: 'Purchase 0.5 acre beachfront plot in Diani for KES 15M. Expected appreciation 20% in 2 years.', votes: { yes: 4, no: 1, abstain: 1 }, status: 'active', deadline: '2026-07-01' },
-    { id: 'prp-2', title: 'Monthly Contribution Increase', description: 'Increase monthly contribution from KES 25K to KES 35K to accelerate property acquisition.', votes: { yes: 3, no: 3, abstain: 0 }, status: 'active', deadline: '2026-06-30' },
-  ]);
+  const user = useAuthStore((s) => s.user);
+  const [chamas, setChamas] = useState<Chama[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [target, setTarget] = useState('');
+  const [monthly, setMonthly] = useState('');
+  const [creating, setCreating] = useState(false);
+  const [payOpen, setPayOpen] = useState(false);
+  const [payTarget, setPayTarget] = useState<Chama | null>(null);
 
-  const handleVote = (proposalId: string, vote: 'yes' | 'no') => {
-    setProposals((prev) =>
-      prev.map((p) =>
-        p.id === proposalId
-          ? { ...p, votes: { ...p.votes, [vote]: p.votes[vote] + 1 } }
-          : p,
-      ),
-    );
-    toast.success(`Vote recorded: ${vote.toUpperCase()}`);
+  const refresh = async () => {
+    setLoading(true);
+    try {
+      const list = await getMyChamas();
+      setChamas(list);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Failed to load chamas');
+    } finally { setLoading(false); }
   };
 
-  const handleInvite = () => {
-    setShowInvite(false);
-    toast.success('Invite sent via SMS and WhatsApp!');
+  useEffect(() => { void refresh(); }, []);
+
+  const handleCreate = async () => {
+    if (!name || !description || !target || !monthly) { toast.error('Fill every field'); return; }
+    setCreating(true);
+    try {
+      await createChama({
+        name,
+        description,
+        targetKes: Number(target),
+        monthlyContribution: Number(monthly),
+      });
+      toast.success('Chama created. Invite members from the group page.');
+      setName(''); setDescription(''); setTarget(''); setMonthly('');
+      setCreateOpen(false);
+      await refresh();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Could not create chama');
+    } finally { setCreating(false); }
   };
 
-  const handleNewProposal = (e: React.FormEvent) => {
-    e.preventDefault();
-    const form = e.currentTarget as HTMLFormElement;
-    const title = (form.elements.namedItem('propTitle') as HTMLInputElement).value;
-    const desc = (form.elements.namedItem('propDesc') as HTMLTextAreaElement).value;
-    if (!title || !desc) { toast.error('Please fill all fields.'); return; }
-    const newProposal: ChamaProposal = {
-      id: `prp-${Date.now()}`,
-      title,
-      description: desc,
-      votes: { yes: 0, no: 0, abstain: 0 },
-      status: 'active',
-      deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    };
-    setProposals((prev) => [newProposal, ...prev]);
-    setShowProposal(false);
-    toast.success('New proposal created!');
+  const handleContribute = (chama: Chama) => {
+    setPayTarget(chama);
+    setPayOpen(true);
   };
 
-  const totalCapital = initialMembers.reduce((s, m) => s + m.contribution, 0);
+  const handlePay = async (method: PaymentMethod, ref: string) => {
+    if (!payTarget) return;
+    const period = new Date().toLocaleDateString('en-KE', { year: 'numeric', month: 'long' });
+    try {
+      await contributeToChama(payTarget.id, {
+        amount: Number(payTarget.monthlyContribution),
+        period,
+        paymentMethod: method,
+        paymentRef: ref,
+      });
+      toast.success('Contribution recorded. Asante!');
+      await refresh();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Could not record contribution');
+    }
+  };
 
   return (
-      <div className="space-y-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Chama Dashboard</h1>
-            <p className="text-gray-500 dark:text-gray-400 mt-1">Vestra Investment Group &middot; {initialMembers.length} Members</p>
+    <div className="space-y-6">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-violet-700 via-purple-700 to-fuchsia-800 p-6 sm:p-8 text-white">
+        <div className="absolute inset-0 opacity-10"><div className="absolute top-0 right-0 w-72 h-72 bg-white rounded-full blur-3xl" /></div>
+        <div className="relative z-10 flex items-start justify-between gap-4 flex-wrap">
+          <div className="space-y-1 max-w-2xl">
+            <div className="flex items-center gap-2 text-violet-200 text-xs font-semibold uppercase tracking-wider">
+              <PiggyBank size={14} /> Vestra Investments
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-black">Pool capital. Buy real estate together.</h1>
+            <p className="text-sm text-violet-100/90">Run your chama with a transparent ledger, M-Pesa-anchored contributions, and shared property ownership.</p>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setShowInvite(true)}><UserPlus size={16} /> Invite Member</Button>
-            <Button onClick={() => setShowProposal(true)}><PlusCircle size={16} /> New Proposal</Button>
-          </div>
+          <Button className="bg-white text-violet-700 hover:bg-violet-50" size="lg" onClick={() => setCreateOpen(true)}>
+            <Plus size={16} /> Start a chama
+          </Button>
         </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard title="Total Capital" value={`KES ${(totalCapital / 1_000_000).toFixed(1)}M`} icon={CreditCard} color="emerald" />
-          <StatCard title="Members" value={initialMembers.length} icon={Users} color="blue" />
-          <StatCard title="Active Proposals" value={proposals.filter((p) => p.status === 'active').length} icon={Vote} color="amber" />
-          <StatCard title="Monthly Contribution" value="KES 150K" icon={TrendingUp} color="purple" />
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card>
-            <div className="p-4 border-b border-gray-100 dark:border-gray-700">
-              <h3 className="font-semibold text-gray-900 dark:text-white">Members</h3>
-            </div>
-            <div className="divide-y divide-gray-100 dark:divide-gray-700">
-              {initialMembers.map((m) => (
-                <div key={m.id} className="p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-sm font-bold text-emerald-600">
-                      {m.name[0]}
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-900 dark:text-white text-sm">{m.name}</p>
-                      <p className="text-xs text-gray-500">Joined {new Date(m.joinedAt).toLocaleDateString()}</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-medium text-gray-900 dark:text-white text-sm">KES {m.contribution.toLocaleString('en-KE')}</p>
-                    <p className="text-xs text-gray-500">{m.share}% share</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Card>
-
-          <Card>
-            <div className="p-4 border-b border-gray-100 dark:border-gray-700">
-              <h3 className="font-semibold text-gray-900 dark:text-white">Active Proposals</h3>
-            </div>
-            <div className="divide-y divide-gray-100 dark:divide-gray-700">
-              {proposals.map((p) => (
-                <div key={p.id} className="p-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h4 className="font-medium text-gray-900 dark:text-white">{p.title}</h4>
-                    <Badge variant={p.status === 'active' ? 'warning' : p.status === 'passed' ? 'success' : 'danger'}>{p.status}</Badge>
-                  </div>
-                  <p className="text-sm text-gray-500">{p.description}</p>
-                  <div className="flex items-center gap-4 text-xs">
-                    <span className="text-emerald-600">{p.votes.yes} Yes</span>
-                    <span className="text-red-600">{p.votes.no} No</span>
-                    <span className="text-gray-400">{p.votes.abstain} Abstain</span>
-                    <span className="text-gray-400 flex items-center gap-1"><Calendar size={10} /> Ends {new Date(p.deadline).toLocaleDateString()}</span>
-                  </div>
-                  {p.status === 'active' && (
-                    <div className="flex gap-1">
-                      <Button size="sm" variant="outline" className="flex-1" onClick={() => handleVote(p.id, 'yes')}>Vote Yes</Button>
-                      <Button size="sm" variant="outline" className="flex-1" onClick={() => handleVote(p.id, 'no')}>Vote No</Button>
-                    </div>
-                  )}
-                </div>
-              ))}
-              {proposals.length === 0 && (
-                <div className="p-8 text-center text-gray-400">
-                  <Vote size={32} className="mx-auto mb-2 text-gray-600" />
-                  <p>No proposals yet.</p>
-                  <Button size="sm" className="mt-3" onClick={() => setShowProposal(true)}>Create one</Button>
-                </div>
-              )}
-            </div>
-          </Card>
-        </div>
-
-        {showInvite && (
-          <Card className="p-6 space-y-4">
-            <h3 className="font-semibold text-gray-900 dark:text-white">Invite Member</h3>
-            <Input label="Phone Number" placeholder="+254 7XX XXX XXX" />
-            <Input label="Name" placeholder="Full name" />
-            <p className="text-xs text-gray-500">They will receive an SMS and WhatsApp invite to join the chama.</p>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={() => setShowInvite(false)}>Cancel</Button>
-              <Button onClick={handleInvite}><CheckCircle size={16} /> Send Invite</Button>
-            </div>
-          </Card>
-        )}
-
-        {showProposal && (
-          <Card className="p-6 space-y-4">
-            <h3 className="font-semibold text-gray-900 dark:text-white">New Proposal</h3>
-            <form onSubmit={handleNewProposal} className="space-y-4">
-              <Input label="Title" name="propTitle" placeholder="e.g., Invest in a plot" />
-              <div><label className="block text-sm font-medium text-gray-300 mb-1.5">Description</label><textarea name="propDesc" rows={3} className="w-full rounded-lg border border-gray-600 bg-gray-800 px-4 py-2.5 text-sm text-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none" /></div>
-              <div className="flex gap-2">
-                <Button variant="outline" onClick={() => setShowProposal(false)}>Cancel</Button>
-                <Button type="submit"><CheckCircle size={16} /> Create Proposal</Button>
-              </div>
-            </form>
-          </Card>
-        )}
       </div>
+
+      {loading ? (
+        <div className="flex justify-center py-12"><Loader2 size={28} className="animate-spin text-violet-600" /></div>
+      ) : chamas.length === 0 ? (
+        <Card className="text-center py-12">
+          <div className="w-16 h-16 rounded-2xl bg-violet-50 dark:bg-violet-900/20 text-violet-600 flex items-center justify-center mx-auto mb-3">
+            <Sparkles size={28} />
+          </div>
+          <h3 className="font-bold text-gray-900 dark:text-white text-lg">You aren't in any chamas yet</h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 max-w-md mx-auto">Chamas let groups of friends, family or colleagues co-buy property. Transparent ledger, M-Pesa contributions, shared ownership.</p>
+          <Button className="mt-4 bg-violet-600 hover:bg-violet-700 text-white" onClick={() => setCreateOpen(true)}>
+            <Plus size={14} /> Start your first chama
+          </Button>
+        </Card>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {chamas.map((c) => {
+            const raised = Number(c.raisedKes || 0);
+            const tgt = Number(c.targetKes);
+            const progress = tgt ? Math.min(100, Math.round((raised / tgt) * 100)) : 0;
+            return (
+              <Card key={c.id} className="flex flex-col">
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-bold text-gray-900 dark:text-white truncate">{c.name}</h3>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2">{c.description}</p>
+                  </div>
+                  <Badge variant={c.status === 'active' ? 'success' : 'warning'}>{c.status}</Badge>
+                </div>
+
+                <div className="mt-3 mb-3">
+                  <div className="flex justify-between text-xs mb-1">
+                    <span className="text-gray-500">{fmtKES(raised)} raised</span>
+                    <span className="font-semibold text-violet-700 dark:text-violet-400">{progress}%</span>
+                  </div>
+                  <div className="h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+                    <div className="h-full bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-full transition-all" style={{ width: `${progress}%` }} />
+                  </div>
+                  <div className="flex justify-between text-[11px] text-gray-400 mt-1">
+                    <span>Target {fmtKES(tgt)}</span>
+                    <span>KES {Number(c.monthlyContribution).toLocaleString()}/mo per member</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between gap-3 text-xs text-gray-500 mt-1 mb-3">
+                  <span className="flex items-center gap-1"><Users size={12} /> {c.members.length} members</span>
+                  <span className="flex items-center gap-1"><Target size={12} /> {c.properties.length} {c.properties.length === 1 ? 'property' : 'properties'}</span>
+                </div>
+
+                {c.members.length > 0 && (
+                  <div className="flex items-center gap-1 mb-3">
+                    {c.members.slice(0, 4).map((m) => (
+                      <div key={m.id} className="w-7 h-7 rounded-full bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 flex items-center justify-center text-[10px] font-bold uppercase border-2 border-white dark:border-gray-900" title={`${m.user?.fullName} · ${m.role}`}>
+                        {m.user?.fullName?.[0] || '?'}
+                      </div>
+                    ))}
+                    {c.members.length > 4 && (
+                      <span className="text-[10px] text-gray-500 ml-1">+{c.members.length - 4}</span>
+                    )}
+                  </div>
+                )}
+
+                <div className="mt-auto flex items-center gap-2">
+                  <Button size="sm" className="flex-1 bg-violet-600 hover:bg-violet-700 text-white" onClick={() => handleContribute(c)}>
+                    <Receipt size={12} /> Contribute
+                  </Button>
+                  <Button size="sm" variant="outline">
+                    Details <ArrowRight size={12} />
+                  </Button>
+                </div>
+                {c.members.find((m) => m.userId === user?.id)?.role === 'founder' && (
+                  <p className="text-[10px] text-violet-600 dark:text-violet-400 mt-2 flex items-center gap-1"><Crown size={10} /> You founded this</p>
+                )}
+              </Card>
+            );
+          })}
+        </div>
+      )}
+
+      <Card className="bg-violet-50/40 dark:bg-violet-900/10 border-violet-200 dark:border-violet-900/40">
+        <div className="flex items-start gap-3">
+          <div className="w-10 h-10 rounded-xl bg-violet-100 dark:bg-violet-900/30 text-violet-600 flex items-center justify-center shrink-0"><CheckCircle2 size={18} /></div>
+          <div className="text-sm text-gray-700 dark:text-gray-300">
+            <p className="font-semibold text-gray-900 dark:text-white mb-1">How Vestra chamas work</p>
+            <p className="text-xs leading-relaxed">Founder creates the group + target. Members contribute via any payment method (M-Pesa, card, bank). Every contribution is logged with proof. When the pot hits the target, the group buys property — ownership recorded with proportional shares.</p>
+          </div>
+        </div>
+      </Card>
+
+      <Modal open={createOpen} onClose={() => setCreateOpen(false)} size="md" variant="bottom" title="Start a chama">
+        <div className="space-y-3 pb-2">
+          <Input label="Chama name" placeholder="Karen Land Pool" value={name} onChange={(e) => setName(e.target.value)} />
+          <div className="w-full space-y-1.5">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Description</label>
+            <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} placeholder="What is the group saving for?"
+              className="w-full rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2.5 text-sm focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 outline-none resize-none" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <Input label="Target (KES)" type="number" placeholder="5000000" value={target} onChange={(e) => setTarget(e.target.value)} />
+            <Input label="Monthly per member (KES)" type="number" placeholder="20000" value={monthly} onChange={(e) => setMonthly(e.target.value)} />
+          </div>
+          <div className="flex justify-end gap-2 pt-1">
+            <Button variant="ghost" onClick={() => setCreateOpen(false)}>Cancel</Button>
+            <Button className="bg-violet-600 hover:bg-violet-700 text-white" onClick={handleCreate} disabled={creating}>
+              {creating ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
+              Create chama
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      <PaymentMethodPicker
+        open={payOpen}
+        onClose={() => { setPayOpen(false); setPayTarget(null); }}
+        amount={Number(payTarget?.monthlyContribution || 0)}
+        context={payTarget ? `Contribution to ${payTarget.name}` : ''}
+        onPay={handlePay}
+      />
+    </div>
   );
 }
