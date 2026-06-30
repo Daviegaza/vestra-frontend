@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Vestra — System Overview & Roadmap</title>
+<style>
+:root {
+  --emerald: #059669;
+  --emerald-dark: #047857;
+  --ink: #0f172a;
+  --muted: #64748b;
+  --line: #e2e8f0;
+  --soft: #f8fafc;
+  --accent: #f59e0b;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, sans-serif; color: var(--ink); }
+body { padding: 48px 56px; max-width: 880px; margin: 0 auto; line-height: 1.55; font-size: 14px; }
+.cover { text-align: center; padding: 80px 0 60px; border-bottom: 4px solid var(--emerald); margin-bottom: 32px; page-break-after: always; }
+.cover .logo { display: inline-flex; align-items: center; gap: 12px; font-size: 32px; font-weight: 900; color: var(--emerald); }
+.cover .logo .mark { width: 56px; height: 56px; background: var(--emerald); border-radius: 14px; color: white; display: inline-flex; align-items: center; justify-content: center; font-size: 28px; }
+.cover h1 { font-size: 44px; margin: 24px 0 8px; letter-spacing: -0.02em; }
+.cover .sub { color: var(--muted); font-size: 18px; max-width: 620px; margin: 0 auto; }
+.cover .meta { margin-top: 48px; color: var(--muted); font-size: 13px; }
+h2 { font-size: 26px; margin: 48px 0 8px; padding-bottom: 8px; border-bottom: 2px solid var(--line); }
+h3 { font-size: 18px; margin: 28px 0 8px; color: var(--emerald-dark); }
+h4 { font-size: 15px; margin: 18px 0 6px; }
+p, li { color: var(--ink); }
+.muted { color: var(--muted); }
+.lead { font-size: 16px; color: var(--ink); }
+table { width: 100%; border-collapse: collapse; margin: 12px 0 18px; font-size: 12.5px; }
+th, td { text-align: left; padding: 8px 10px; border: 1px solid var(--line); vertical-align: top; }
+th { background: var(--soft); font-weight: 700; }
+tr:nth-child(even) td { background: #fcfdfe; }
+.pill { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+.pill.shipped { background: #d1fae5; color: #047857; }
+.pill.planned { background: #fef3c7; color: #92400e; }
+.pill.future { background: #e0e7ff; color: #3730a3; }
+.callout { border-left: 4px solid var(--emerald); background: var(--soft); padding: 12px 18px; border-radius: 0 10px 10px 0; margin: 16px 0; }
+.callout strong { color: var(--emerald-dark); }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.card { border: 1px solid var(--line); border-radius: 12px; padding: 16px; background: white; }
+.card h4 { margin-top: 0; color: var(--emerald-dark); }
+code { background: #f1f5f9; padding: 1px 6px; border-radius: 4px; font-size: 12.5px; font-family: "SF Mono", Consolas, monospace; }
+pre { background: var(--ink); color: #e2e8f0; padding: 16px; border-radius: 10px; overflow-x: auto; font-size: 12px; line-height: 1.5; }
+pre code { background: transparent; color: inherit; padding: 0; }
+.section { page-break-inside: avoid; }
+ul { padding-left: 20px; }
+ul li { margin-bottom: 4px; }
+.footer { margin-top: 64px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: 11px; text-align: center; }
+@media print {
+  body { padding: 24px 32px; font-size: 12px; }
+  .cover { padding: 40px 0; page-break-after: always; }
+  h2 { page-break-after: avoid; }
+  table, .card, .callout, pre { page-break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <div class="logo"><span class="mark">V</span> Vestra</div>
+  <h1>Real Estate, Unified.</h1>
+  <p class="sub">The trust-first property platform for buyers, sellers, landlords, tenants, agents and investors — one account, one identity, every dashboard you need.</p>
+  <div class="meta">System Overview &amp; 18-Week Roadmap · Generated 2026-06-30</div>
+</div>
+
+<h2>1. Problems Vestra solves</h2>
+<p class="lead">Kenya's real-estate market loses billions every year to fraud, opaque pricing, paper leases that vanish, and chaotic rent collection. Vestra closes those gaps with one unified, trust-graded platform.</p>
+
+<div class="grid-2">
+  <div class="card">
+    <h4>Buyers</h4>
+    <ul>
+      <li>Forged title deeds &amp; ghost sellers</li>
+      <li>No transparent price-per-sqft data</li>
+      <li>Paying cash to unverified parties</li>
+      <li>No escrow culture — wire-and-pray</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h4>Sellers</h4>
+    <ul>
+      <li>Cannot reach verified buyers directly</li>
+      <li>No analytics on listing performance</li>
+      <li>Commission opacity with brokers</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h4>Landlords</h4>
+    <ul>
+      <li>Rent across cash / M-Pesa / bank — chaos</li>
+      <li>Word-doc leases over WhatsApp</li>
+      <li>Maintenance lost in phone calls</li>
+      <li>No tax-ready rent roll</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h4>Tenants</h4>
+    <ul>
+      <li>No proof of payment for visa/credit apps</li>
+      <li>Maintenance complaints ignored</li>
+      <li>Lease disputes — paper-only</li>
+      <li>Heavy upfront move-in costs</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h4>Agents</h4>
+    <ul>
+      <li>Leads on WhatsApp / Excel — no CRM</li>
+      <li>Commission disputes with brokerages</li>
+      <li>EARB license not visible to consumers</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h4>Investors (Chama)</h4>
+    <ul>
+      <li>Group purchases tracked on chalkboards</li>
+      <li>No transparent contribution ledger</li>
+      <li>Decisions on phone calls — no voting</li>
+    </ul>
+  </div>
+</div>
+
+<h2>2. Differentiators</h2>
+<div class="section">
+  <p><strong>Trust layer.</strong> AI title-deed verification (OCR + Ministry of Lands cross-check), Trust Score 0–100 per property, EARB-verified Agent badges, multi-party escrow wallet.</p>
+  <p><strong>Multi-role identity.</strong> One Vestra account, activate roles as life evolves: Member → Landlord → Seller → Investor → Tenant. Switchable from topbar / sidebar.</p>
+  <p><strong>Native M-Pesa rails.</strong> STK Push for rent, deposits, escrow funding. Auto receipts (PDF) + tax-ready CSV. Paybill auto-reconciliation.</p>
+  <p><strong>Chama Cooperative Engine.</strong> Shared cap table, M-Pesa-anchored contribution ledger, in-app voting, buy-out calculator.</p>
+  <p><strong>Lease-as-a-Service.</strong> Template marketplace + e-sign + hash-anchored timestamps + dispute timeline.</p>
+  <p><strong>Maintenance Marketplace.</strong> Vetted contractor pool, photo-required updates, SLA timer, micro-escrow.</p>
+  <p><strong>Investment Intelligence.</strong> Suburb price index, rental yield calculator, comparable sales w/ confidence intervals.</p>
+</div>
+
+<h2>3. Feature Roadmap by Role</h2>
+
+<h3>3.1 Member (base)</h3>
+<ul>
+  <li><span class="pill shipped">shipped</span> Discoverable sidebar — Market, Verify, Insights, Investments, Escrow</li>
+  <li><span class="pill planned">planned</span> Saved searches with email/SMS alerts</li>
+  <li><span class="pill planned">planned</span> Personalized recommendations</li>
+  <li><span class="pill future">future</span> Trust circle — invite past transaction partners to vouch</li>
+</ul>
+
+<h3>3.2 Seller</h3>
+<ul>
+  <li><span class="pill shipped">shipped</span> Multi-role activation + listing CRUD (backend wired)</li>
+  <li><span class="pill planned">planned</span> Listing analytics — views over time, inquiry funnel</li>
+  <li><span class="pill planned">planned</span> Featured listing boost (paid)</li>
+  <li><span class="pill planned">planned</span> Buyer Q&amp;A thread on each listing</li>
+  <li><span class="pill future">future</span> Photographer marketplace</li>
+</ul>
+
+<h3>3.3 Landlord</h3>
+<ul>
+  <li><span class="pill shipped">shipped</span> Unit CRUD + tenant invite flow (e2e: invite → accept → role activates)</li>
+  <li><span class="pill planned">planned</span> Rent roll table w/ month picker</li>
+  <li><span class="pill planned">planned</span> Auto rent-reminder SMS</li>
+  <li><span class="pill planned">planned</span> Vacancy → one-click main-portal listing</li>
+  <li><span class="pill planned">planned</span> Tenant scoring across the platform</li>
+  <li><span class="pill planned">planned</span> KRA-ready tax export</li>
+  <li><span class="pill planned">planned</span> Maintenance ticket flow + contractor pool</li>
+  <li><span class="pill future">future</span> Insurance broker tie-in</li>
+</ul>
+
+<h3>3.4 Tenant</h3>
+<ul>
+  <li><span class="pill shipped">shipped</span> Invite acceptance + auto role activation</li>
+  <li><span class="pill planned">planned</span> Rent payment via M-Pesa STK</li>
+  <li><span class="pill planned">planned</span> Receipt vault — PDF + bulk download</li>
+  <li><span class="pill planned">planned</span> Maintenance request with photo upload</li>
+  <li><span class="pill planned">planned</span> Lease viewer + e-sign</li>
+  <li><span class="pill planned">planned</span> Move-out checklist + deposit return tracker</li>
+  <li><span class="pill future">future</span> Credit-building report (rent on-time history → bank-grade letter)</li>
+</ul>
+
+<h3>3.5 Agent</h3>
+<ul>
+  <li><span class="pill shipped">shipped</span> Profile + dashboard shell + backend wired</li>
+  <li><span class="pill planned">planned</span> Lead pipeline (kanban: new → contacted → viewing → offer → closed)</li>
+  <li><span class="pill planned">planned</span> Commission tracker w/ auto-pull from closed escrows</li>
+  <li><span class="pill planned">planned</span> Subscription tier enforcement (see §4)</li>
+  <li><span class="pill planned">planned</span> Featured agent placements</li>
+  <li><span class="pill future">future</span> Co-broker split tracking, private deal rooms</li>
+</ul>
+
+<h3>3.6 Investor (Chama)</h3>
+<ul>
+  <li><span class="pill planned">planned</span> Group creation + member invites</li>
+  <li><span class="pill planned">planned</span> Cap table + contribution ledger</li>
+  <li><span class="pill planned">planned</span> Vote engine (majority / supermajority / unanimous)</li>
+  <li><span class="pill planned">planned</span> Dividend distribution from rental income</li>
+</ul>
+
+<h3>3.7 Admin</h3>
+<ul>
+  <li><span class="pill shipped">shipped</span> User table, verification queue, fraud reports shells</li>
+  <li><span class="pill planned">planned</span> AI-flagged listing review queue</li>
+  <li><span class="pill planned">planned</span> Disputed-transaction arbitration UI</li>
+  <li><span class="pill planned">planned</span> Revenue dashboard</li>
+</ul>
+
+<h2>4. Subscriptions &amp; Monetization</h2>
+
+<div class="callout"><strong>Strategy.</strong> Layered revenue: subscriptions (recurring) + take rate (transactional) + B2B referrals (commission). Pricing benchmarked to Kenyan SaaS willingness-to-pay.</div>
+
+<h3>4.1 Agent Tiers</h3>
+<table>
+<tr><th>Tier</th><th>KES / mo</th><th>Listings</th><th>Featured</th><th>Lead alerts</th><th>Co-broker</th><th>Badge</th></tr>
+<tr><td>Free</td><td>0</td><td>5</td><td>0</td><td>Email only</td><td>—</td><td>Bronze</td></tr>
+<tr><td>Starter</td><td>1,500</td><td>20</td><td>2/mo</td><td>Email + SMS</td><td>—</td><td>Silver</td></tr>
+<tr><td>Pro</td><td>4,500</td><td>100</td><td>10/mo</td><td>Real-time + WhatsApp</td><td>Yes</td><td>Gold</td></tr>
+<tr><td>Elite</td><td>12,000</td><td>Unlimited</td><td>Unlimited</td><td>Priority + CS manager</td><td>Yes + exports</td><td>Platinum</td></tr>
+</table>
+
+<h3>4.2 Landlord Tiers</h3>
+<table>
+<tr><th>Tier</th><th>KES / mo</th><th>Units</th><th>Auto-reminders</th><th>Maintenance</th><th>Tax export</th></tr>
+<tr><td>Free</td><td>0</td><td>3</td><td>Manual</td><td>Basic</td><td>—</td></tr>
+<tr><td>Plus</td><td>800</td><td>15</td><td>Yes</td><td>Yes</td><td>CSV</td></tr>
+<tr><td>Pro</td><td>2,500</td><td>50</td><td>Yes + escalation</td><td>+ contractor mkt</td><td>CSV + PDF</td></tr>
+<tr><td>Estate</td><td>8,000</td><td>Unlimited</td><td>+ tenant scoring</td><td>Dedicated coord</td><td>Accountant-ready</td></tr>
+</table>
+
+<h3>4.3 Take-rate revenue (deal-based)</h3>
+<table>
+<tr><th>Item</th><th>Rate</th></tr>
+<tr><td>Escrow fee</td><td>0.5% of transaction, cap KES 100k</td></tr>
+<tr><td>Verification report</td><td>KES 2,500 / property</td></tr>
+<tr><td>Featured listing boost</td><td>KES 1,000–5,000 / week</td></tr>
+<tr><td>Lease e-sign with stamp</td><td>KES 500 / document</td></tr>
+<tr><td>Tenant credit-report letter</td><td>KES 200 / letter</td></tr>
+<tr><td>Mortgage referral</td><td>0.25–0.5% of loan value (bank pays)</td></tr>
+<tr><td>Insurance referral</td><td>5–10% commission (broker pays)</td></tr>
+</table>
+
+<h3>4.4 Buyer micro-payments</h3>
+<table>
+<tr><th>Tier</th><th>Price</th><th>What you get</th></tr>
+<tr><td>Free</td><td>—</td><td>Browse + save 20 properties</td></tr>
+<tr><td>Verified Buyer</td><td>KES 500 one-off</td><td>Unlimited saves, priority inquiry, identity-verified shield</td></tr>
+<tr><td>Pro Buyer</td><td>KES 2,000 / mo</td><td>AI valuation, mortgage pre-qual, suburb deep-dives, ROI calculator</td></tr>
+</table>
+
+<h3>4.5 Chama tiers</h3>
+<table>
+<tr><th>Tier</th><th>KES / mo</th><th>Members</th><th>Properties</th><th>Voting</th><th>Audit log</th></tr>
+<tr><td>Starter</td><td>0</td><td>10</td><td>1</td><td>Basic</td><td>30 days</td></tr>
+<tr><td>Group</td><td>1,500</td><td>50</td><td>5</td><td>+ supermajority</td><td>1 year</td></tr>
+<tr><td>Cooperative</td><td>5,000</td><td>Unlimited</td><td>Unlimited</td><td>+ custom rules</td><td>Unlimited</td></tr>
+</table>
+
+<h3>4.6 Year-1 revenue model</h3>
+<div class="callout">
+<p>Assumptions — Kenya, year-1 traction: 5,000 active agents · 15,000 landlords managing ~80k units · 100k buyers · 1,000 chamas.</p>
+<table>
+<tr><th>Source</th><th>MRR (KES)</th></tr>
+<tr><td>Agent subscriptions</td><td>~4.2M</td></tr>
+<tr><td>Landlord subscriptions</td><td>~5.6M</td></tr>
+<tr><td>Chama subscriptions</td><td>~1.0M</td></tr>
+<tr><td>Buyer Pro</td><td>~4.0M</td></tr>
+<tr><td>Escrow take rate</td><td>~5.0M</td></tr>
+<tr><td>Verification + e-sign + alerts</td><td>~1.5M</td></tr>
+<tr><th>Total MRR</th><th>~KES 21M (~USD 145k)</th></tr>
+<tr><th>ARR</th><th>~KES 250M (~USD 1.74M)</th></tr>
+</table>
+</div>
+
+<h2>5. UI Modernization</h2>
+<ul>
+  <li><span class="pill shipped">shipped</span> Dark mode (Tailwind v4 with @custom-variant)</li>
+  <li><span class="pill shipped">shipped</span> Code splitting (recharts/maps/framer/icons vendors)</li>
+  <li><span class="pill shipped">shipped</span> Lazy heavy components + idle-callback mount</li>
+  <li><span class="pill shipped">shipped</span> Persistent role-scope breadcrumb on every dashboard page</li>
+  <li><span class="pill planned">planned</span> Motion library — micro-interactions on every CTA</li>
+  <li><span class="pill planned">planned</span> Skeletons on every data-fetch surface</li>
+  <li><span class="pill planned">planned</span> Empty states designed per feature</li>
+  <li><span class="pill planned">planned</span> Global command palette (Cmd-K) — search across listings, units, leases</li>
+  <li><span class="pill planned">planned</span> Smart inbox: messages + notifications + invites merged</li>
+  <li><span class="pill planned">planned</span> "What's next" widget on home</li>
+  <li><span class="pill planned">planned</span> WCAG 2.2 AA pass + keyboard nav + screen reader testing</li>
+  <li><span class="pill future">future</span> Image CDN + responsive srcset + service worker offline shell</li>
+</ul>
+
+<h2>6. Mobile Path — Play &amp; Apple Stores</h2>
+
+<div class="callout"><strong>Recommended architecture: Capacitor.</strong> Wraps the existing Vite/React PWA into native iOS + Android binaries. One codebase, native APIs available, ~2 weeks engineering for the wrap itself, then 6–8 weeks to submission and approval.</div>
+
+<h3>6.1 Setup commands</h3>
+<pre><code># 1. Install Capacitor
+cd vestra_properties
+npm install @capacitor/core @capacitor/cli @capacitor/ios @capacitor/android
+npx cap init "Vestra" "com.vestra.app" --web-dir=dist
+
+# 2. Build web bundle
+npm run build
+
+# 3. Add native platforms
+npx cap add ios
+npx cap add android
+npx cap sync
+
+# 4. Open in native IDEs
+npx cap open ios       # Xcode
+npx cap open android   # Android Studio</code></pre>
+
+<h3>6.2 Native plugins to add</h3>
+<ul>
+  <li><code>@capacitor/push-notifications</code> — rent reminders, invite alerts</li>
+  <li><code>@capacitor/camera</code> — property/maintenance photos</li>
+  <li><code>@capacitor/geolocation</code> — map filter, suburb detection</li>
+  <li><code>@capacitor/share</code> — listing share to WhatsApp</li>
+  <li><code>@capacitor-community/biometric-auth</code> — login + STK confirm</li>
+  <li><code>@capacitor/local-notifications</code> — offline rent due reminders</li>
+  <li>M-Pesa Daraja SDK (community plugin or REST direct)</li>
+</ul>
+
+<h3>6.3 Store submission checklist</h3>
+<div class="grid-2">
+  <div class="card">
+    <h4>Apple App Store</h4>
+    <ul>
+      <li>Apple Developer Account ($99/yr)</li>
+      <li>App Store Connect listing — name, subtitle, keywords, screenshots @ 6.5" / 5.5"</li>
+      <li>Privacy policy URL</li>
+      <li>App Privacy questionnaire (PII, location, financial data)</li>
+      <li>TestFlight beta — 25+ Kenya testers</li>
+      <li>Review: 24–72 hr typical</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h4>Google Play</h4>
+    <ul>
+      <li>Play Console ($25 one-off)</li>
+      <li>Short + full description, feature graphic, 8 screenshots</li>
+      <li>Content rating questionnaire</li>
+      <li>Data safety declaration</li>
+      <li>Closed testing — 20+ testers × 14 days</li>
+      <li>Closed → open → production release</li>
+    </ul>
+  </div>
+</div>
+
+<h3>6.4 Compliance landmines</h3>
+<ul>
+  <li><strong>Financial services flag</strong> — Apple may demand banking license disclosure if M-Pesa rent is in-app. Mitigation: position as "third-party payment integration," surface clear T&amp;Cs.</li>
+  <li><strong>Real-estate brokerage license</strong> — visible reference to EARB compliance required.</li>
+  <li><strong>KYC privacy</strong> — disclose ID collection in Privacy Policy.</li>
+</ul>
+
+<h3>6.5 Timeline</h3>
+<table>
+<tr><th>Weeks</th><th>Milestone</th></tr>
+<tr><td>1–2</td><td>Capacitor wrap, native plugin integration, dev builds</td></tr>
+<tr><td>3–4</td><td>Internal testing (Vestra team)</td></tr>
+<tr><td>5</td><td>TestFlight + Play closed testing</td></tr>
+<tr><td>6–7</td><td>Store listings, screenshots, privacy policy</td></tr>
+<tr><td>8</td><td>Submit. Apple ~3 days. Play ~14 days.</td></tr>
+</table>
+<p><strong>Realistic public launch: ~10 weeks from start of mobile work.</strong></p>
+
+<h2>7. Shipped vs Outstanding</h2>
+
+<h3>Shipped this build cycle</h3>
+<ul>
+  <li><span class="pill shipped">shipped</span> Multi-role architecture (User.roles[] + activeRole) backed by Postgres</li>
+  <li><span class="pill shipped">shipped</span> Role activation modal wizard for self-serve roles</li>
+  <li><span class="pill shipped">shipped</span> Roles Hub at /dashboard/roles</li>
+  <li><span class="pill shipped">shipped</span> Role switcher in topbar + sidebar</li>
+  <li><span class="pill shipped">shipped</span> Tenant invite flow end-to-end (landlord → tenant → auto-role)</li>
+  <li><span class="pill shipped">shipped</span> Persistent dashboard scope bar</li>
+  <li><span class="pill shipped">shipped</span> Sidebar discoverability — Investments, Escrow, Insights, Roles visible</li>
+  <li><span class="pill shipped">shipped</span> Real Node + Express + Prisma backend (~30 endpoints)</li>
+  <li><span class="pill shipped">shipped</span> Postgres schema, 14 models, seeded demo data</li>
+  <li><span class="pill shipped">shipped</span> Frontend fully wired to backend</li>
+  <li><span class="pill shipped">shipped</span> Tailwind v4 dark mode fix</li>
+  <li><span class="pill shipped">shipped</span> Vite perf tuning (vendor chunks, optimizeDeps, idle-callback)</li>
+  <li><span class="pill shipped">shipped</span> TS clean (exit 0 both ends)</li>
+</ul>
+
+<h3>Outstanding (next 4.5 months)</h3>
+<ul>
+  <li><span class="pill planned">planned</span> Subscription tier enforcement (backend + paywall UI)</li>
+  <li><span class="pill planned">planned</span> M-Pesa Daraja integration (sandbox → live)</li>
+  <li><span class="pill planned">planned</span> AI verification pipeline (OCR + KENHA cross-check)</li>
+  <li><span class="pill planned">planned</span> Chama cooperative module</li>
+  <li><span class="pill planned">planned</span> Maintenance contractor marketplace</li>
+  <li><span class="pill planned">planned</span> Lease e-sign service</li>
+  <li><span class="pill planned">planned</span> Notification preferences (SMS, email, in-app)</li>
+  <li><span class="pill planned">planned</span> Saved searches + alerts</li>
+  <li><span class="pill planned">planned</span> Capacitor mobile wrap + native plugins</li>
+  <li><span class="pill planned">planned</span> Store submissions</li>
+  <li><span class="pill planned">planned</span> WCAG AA accessibility audit</li>
+  <li><span class="pill planned">planned</span> Service worker / offline shell</li>
+  <li><span class="pill planned">planned</span> Production hardening — Sentry, audit log, per-route rate limits</li>
+</ul>
+
+<h2>8. Phased Build Plan</h2>
+<table>
+<tr><th>Phase</th><th>Scope</th><th>Weeks</th></tr>
+<tr><td>0</td><td>Foundations + multi-role + tenant invite (DONE)</td><td>—</td></tr>
+<tr><td>1</td><td>Subscription tiers + paywall enforcement</td><td>2</td></tr>
+<tr><td>2</td><td>M-Pesa STK live + escrow flows</td><td>2</td></tr>
+<tr><td>3</td><td>Chama cooperative module</td><td>3</td></tr>
+<tr><td>4</td><td>Maintenance marketplace + lease e-sign</td><td>3</td></tr>
+<tr><td>5</td><td>AI verification (MVP — OCR + manual review)</td><td>2</td></tr>
+<tr><td>6</td><td>Capacitor wrap + native plugins</td><td>2</td></tr>
+<tr><td>7</td><td>Store submission + closed testing</td><td>4</td></tr>
+<tr><td>8</td><td>Public launch + paid acquisition</td><td>ongoing</td></tr>
+<tr><th colspan="2">Total focused engineering to "world-class + on stores"</th><th>~18 weeks (~4.5 months)</th></tr>
+</table>
+
+<h2>9. KPIs &amp; Risks</h2>
+
+<h3>KPIs to track</h3>
+<ul>
+  <li><strong>Activation</strong> — % of signups who activate ≥1 non-buyer role within 7 days</li>
+  <li><strong>Subscription conversion</strong> — free → paid by role</li>
+  <li><strong>NRR</strong> — keep &gt; 100% via tier upgrades + take rate</li>
+  <li><strong>Transaction GMV</strong> — escrow + rent processed / month</li>
+  <li><strong>Trust Score avg</strong> — &gt; 85 across active listings</li>
+  <li><strong>Maintenance SLA</strong> — % tickets closed within stated window</li>
+  <li><strong>DAU/MAU</strong> — &gt; 25%</li>
+  <li><strong>Mobile share</strong> — &gt; 70% within 6 months of native launch</li>
+</ul>
+
+<h3>Risks &amp; mitigations</h3>
+<table>
+<tr><th>Risk</th><th>Mitigation</th></tr>
+<tr><td>Apple flagging M-Pesa as financial product</td><td>Partner with licensed PSP, route via their SDK</td></tr>
+<tr><td>Real-estate license requirements vary</td><td>Auto-route listings via EARB-verified agents; tag DIY clearly</td></tr>
+<tr><td>Title-deed verification false negatives</td><td>Human-in-the-loop review for trust score &lt; 80</td></tr>
+<tr><td>Deposit return disputes</td><td>Micro-escrow w/ photo-audit auto-release</td></tr>
+<tr><td>Competition (BuyRentKenya, Hass, Property24)</td><td>Differentiate on trust + role unification, not just listings</td></tr>
+<tr><td>Chama legal grey area</td><td>Engage cooperative-savings lawyer (SACCO Act compliance)</td></tr>
+</table>
+
+<h2>10. What to do next — step by step</h2>
+<ol>
+  <li><strong>Run what's shipped.</strong> Backend on :4000 + frontend on :5173 already wired. Login as <code>landlord@vestra.com</code> / <code>password</code>, add a unit, invite <code>buyer@vestra.com</code>, accept the invitation. Full e2e works.</li>
+  <li><strong>Pick Phase 1 — subscriptions.</strong> Add <code>Subscription</code> Prisma model, paywall middleware, UI tier picker in agent + landlord workspaces, M-Pesa subscription billing via Daraja sandbox.</li>
+  <li><strong>Then M-Pesa rails (Phase 2).</strong> Daraja sandbox keys, STK push for rent, escrow funding.</li>
+  <li><strong>Phase 3 — Chama.</strong> Group + cap-table + voting models.</li>
+  <li><strong>Phase 4 — Maintenance + lease e-sign.</strong></li>
+  <li><strong>Phase 5 — AI verification.</strong> OCR via Tesseract for MVP, upgrade to dedicated model later.</li>
+  <li><strong>Phase 6–7 — Mobile.</strong> Capacitor wrap, plugins, store assets, submissions.</li>
+  <li><strong>Phase 8 — launch + marketing.</strong> Paid Meta + Google Ads, agent acquisition push, referral program.</li>
+</ol>
+
+<div class="footer">
+  Vestra · Real Estate, Unified · System Overview generated 2026-06-30 · Print this page to PDF (Ctrl/Cmd + P → Save as PDF).
+</div>
+
+</body>
+</html>
